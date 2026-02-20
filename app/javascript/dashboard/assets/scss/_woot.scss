@@ -3,7 +3,8 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-@import 'shared/assets/fonts/InterDisplay/inter-display';
+// DM Sans is already imported in App.vue, but we ensure the stack is correct here
+
 @import 'shared/assets/fonts/inter';
 
 // Next Colors
@@ -19,7 +20,9 @@
 html,
 body {
   font-family:
+    'DM Sans',
     'Inter',
+
     -apple-system,
     system-ui,
     BlinkMacSystemFont,

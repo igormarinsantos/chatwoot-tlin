@@ -220,7 +220,7 @@ export default {
 
 <template>
   <main
-    class="flex flex-col w-full min-h-screen py-20 bg-n-brand/5 dark:bg-n-background sm:px-6 lg:px-8"
+    class="flex flex-col w-full min-h-screen py-20 bg-white animated-tlin-bg sm:px-6 lg:px-8"
   >
     <section class="max-w-5xl mx-auto">
       <img
@@ -339,3 +339,23 @@ export default {
     </section>
   </main>
 </template>
+
+<style scoped>
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-tlin-bg {
+  background: linear-gradient(-45deg, #ffffff, #f7fafc, #b597ff15, #38e3ff15);
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
+}
+</style>
