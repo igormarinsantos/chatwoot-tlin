@@ -84,4 +84,25 @@ body {
 .v-popper--theme-tooltip .v-popper__arrow-container {
   display: none;
 }
+.tlin-card {
+  @apply bg-white border border-n-weak shadow-sm rounded-[2rem] p-6;
+}
+
+.tlin-gradient-border {
+  position: relative;
+  background: white;
+  background-clip: padding-box;
+  border: solid 1.5px transparent;
+  border-radius: 2.5rem;
+}
+
+.tlin-gradient-border:before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  z-index: -1;
+  margin: -1.5px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #38E3FF, #B597FF);
+}
 </style>

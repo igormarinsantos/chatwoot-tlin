@@ -13,6 +13,9 @@ class GlobalConfig
       end
 
       typecast_config(config)
+      config['INSTALLATION_NAME'] = 'Tlin' if config['INSTALLATION_NAME'] == 'Chatwoot'
+      config['BRAND_NAME'] = 'Tlin' if config['BRAND_NAME'] == 'Chatwoot'
+
       config.with_indifferent_access
     end
 

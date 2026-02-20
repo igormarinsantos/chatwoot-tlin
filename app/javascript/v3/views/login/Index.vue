@@ -226,7 +226,7 @@ export default {
       <img
         :src="globalConfig.logo"
         :alt="globalConfig.installationName"
-        class="block w-auto h-8 mx-auto"
+        class="block w-auto h-12 mx-auto"
       />
 
       <h2 class="mt-6 text-3xl font-medium text-center text-slate-900">
@@ -252,7 +252,7 @@ export default {
     <!-- Regular Login Section -->
     <section
       v-else
-      class="bg-white border border-n-weak shadow sm:mx-auto mt-11 sm:w-full sm:max-w-lg p-11 sm:shadow-xl sm:rounded-2xl"
+      class="bg-white border border-n-weak/30 shadow-2xl sm:mx-auto mt-11 sm:w-full sm:max-w-lg p-12 sm:rounded-[3rem] relative tlin-gradient-border"
       :class="{
         'mb-8 mt-15': !showGoogleOAuth,
         'animate-wiggle': loginApi.hasErrored,
