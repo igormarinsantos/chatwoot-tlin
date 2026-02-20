@@ -13,7 +13,9 @@ export default {
   },
   methods: {
     setColorTheme() {
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches && false)) {
+        // Disabled auto-dark to follow user's "native light" request
         this.theme = 'dark';
         document.documentElement.classList.add('dark');
       } else {
@@ -21,6 +23,7 @@ export default {
         document.documentElement.classList.remove('dark');
       }
     },
+
     listenToThemeChanges() {
       const mql = window.matchMedia('(prefers-color-scheme: dark)');
 

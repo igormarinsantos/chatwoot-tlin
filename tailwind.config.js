@@ -46,7 +46,7 @@ const tailwindConfig = {
         interDisplay: ['InterDisplay', ...defaultSansFonts],
       },
       backgroundImage: {
-        'tlin-gradient': 'linear-gradient(135deg, #B597FF 0%, #38E3FF 100%)',
+        'tlin-gradient': 'linear-gradient(135deg, #B597FF 0%, #38E3FF 50%, #B597FF 100%)',
       },
       fontWeight: {
         420: '420',
@@ -256,6 +256,15 @@ const tailwindConfig = {
       'loader-pulse': 'loader-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       'card-select': 'card-select 0.25s ease-in-out',
       shake: 'shake 0.3s ease-in-out 0s 2',
+      'tlin-gradient-move': 'tlin-gradient-move 3s ease infinite',
+    },
+    extend: {
+      keyframes: {
+        'tlin-gradient-move': {
+          '0%, 100%': { 'background-size': '200% 200%', 'background-position': 'left center' },
+          '50%': { 'background-size': '200% 200%', 'background-position': 'right center' },
+        },
+      },
     },
   },
   plugins: [
