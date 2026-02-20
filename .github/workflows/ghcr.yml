@@ -22,11 +22,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build base image
+      - name: Build base image (logs)
         run: |
-          docker build -t chatwoot:development -f ./docker/Dockerfile .
+          docker build --progress=plain -t chatwoot:development -f ./docker/Dockerfile .
 
-      - name: Build e Push rails image
+      - name: Build & Push rails image (logs)
         run: |
-          docker build -f ./docker/dockerfiles/rails.Dockerfile -t ghcr.io/igormarinsantos/chatwoot-tlin:latest .
+          docker build --progress=plain -f ./docker/dockerfiles/rails.Dockerfile -t ghcr.io/igormarinsantos/chatwoot-tlin:latest .
           docker push ghcr.io/igormarinsantos/chatwoot-tlin:latest
