@@ -22,7 +22,7 @@ const props = defineProps({
   },
   codepenTitle: {
     type: String,
-    default: 'Chatwoot Codepen',
+    default: 'Tlin.ai Codepen',
   },
   secure: {
     type: Boolean,
