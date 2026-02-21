@@ -1,4 +1,4 @@
-export const icons = {
+const icons = {
   'logic-or': {
     body: `<rect x="14" y="5" width="2" height="13" rx="1" fill="currentColor"/><rect x="8" y="5" width="2" height="13" rx="1" fill="currentColor"/>`,
     width: 24,
@@ -302,3 +302,5 @@ export const icons = {
   },
   /** Ends */
 };
+
+module.exports = { icons };
