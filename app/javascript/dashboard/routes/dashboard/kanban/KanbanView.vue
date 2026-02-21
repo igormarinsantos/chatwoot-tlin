@@ -5,11 +5,13 @@ import { useI18n } from 'vue-i18n';
 import draggable from 'vuedraggable';
 import ContactCard from './ContactCard.vue';
 import PipelineManager from './components/PipelineManager.vue';
+import LeadSelector from './components/LeadSelector.vue';
 
 const store = useStore();
 const { t } = useI18n();
 
 const showManager = ref(false);
+const activeStageForLead = ref(null);
 
 const contacts = computed(() => store.getters['contacts/getContactsList']);
 const customAttributes = computed(() => store.getters['attributes/getContactAttributes']);
@@ -74,11 +76,14 @@ onMounted(async () => {
   <div class="flex flex-col h-full w-full overflow-hidden bg-n-slate-2 p-8 gap-8">
     <header class="flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-bold text-n-slate-12 tracking-tight">Vendas & Funil</h1>
+        <h1 class="text-3xl font-bold text-n-slate-12 tracking-tight">Funil de vendas</h1>
         <p class="text-sm text-n-slate-10 mt-1">Gerencie seus leads e oportunidades de forma ágil.</p>
       </div>
       <div class="flex gap-3">
-        <button class="px-4 py-2 bg-white border border-n-weak rounded-xl text-sm font-medium hover:bg-n-alpha-1 transition-colors">
+        <button
+          class="px-4 py-2 bg-white border border-n-weak rounded-xl text-sm font-medium hover:bg-n-alpha-1 transition-colors"
+          @click="showManager = true"
+        >
           Configurar Etapas
         </button>
       </div>
@@ -115,7 +120,10 @@ onMounted(async () => {
         </draggable>
 
         <div class="p-4 border-t border-n-weak/50">
-          <button class="w-full py-2 flex items-center justify-center gap-2 text-xs font-medium text-n-slate-9 hover:text-n-brand transition-colors">
+          <button
+            class="w-full py-2 flex items-center justify-center gap-2 text-xs font-medium text-n-slate-9 hover:text-n-brand transition-colors"
+            @click="activeStageForLead = stage"
+          >
             <span class="i-lucide-plus size-3" />
             Adicionar Lead
           </button>
@@ -138,6 +146,12 @@ onMounted(async () => {
       v-if="showManager && pipelineAttribute"
       :attribute="pipelineAttribute"
       @close="showManager = false"
+    />
+
+    <LeadSelector
+      v-if="activeStageForLead"
+      :stage="activeStageForLead"
+      @close="activeStageForLead = null"
     />
   </div>
 </template>

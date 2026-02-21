@@ -14,6 +14,14 @@
   }
 }
 
+// Global Dark Mode adjustment for incoming bubbles (USER variant)
+.dark .left-bubble .prose-bubble {
+  color: white !important;
+  * {
+    color: white !important;
+  }
+}
+
 .premium-border {
   position: relative;
   background: white;

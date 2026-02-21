@@ -28,7 +28,7 @@ const varaintBaseMap = {
   [MESSAGE_VARIANTS.AGENT]: 'bg-tlin-gradient text-white !prose-invert shadow-none border-none bubble-gradient',
   [MESSAGE_VARIANTS.PRIVATE]:
     'bg-n-solid-amber text-n-amber-12 [&_.prosemirror-mention-node]:font-semibold',
-  [MESSAGE_VARIANTS.USER]: 'bg-n-slate-3 dark:bg-n-slate-10 text-n-slate-12 dark:text-white border border-n-weak',
+  [MESSAGE_VARIANTS.USER]: 'bg-n-slate-3 dark:bg-n-slate-10 text-n-slate-12 dark:text-white border border-n-weak dark:!prose-invert',
   [MESSAGE_VARIANTS.ACTIVITY]: 'bg-n-alpha-1 text-n-slate-11 text-sm',
   [MESSAGE_VARIANTS.BOT]: 'bg-tlin-gradient text-white !prose-invert bubble-gradient',
   [MESSAGE_VARIANTS.TEMPLATE]: 'bg-tlin-gradient text-white !prose-invert bubble-gradient',
