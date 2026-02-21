@@ -238,7 +238,7 @@ const menuItems = computed(() => {
     {
       name: 'Pipeline',
       label: t('SIDEBAR.PIPELINE'),
-      icon: 'i-lucide-layout-kanban',
+      icon: 'i-lucide-filter',
       to: accountScopedRoute('kanban_view'),
       activeOn: ['kanban_view'],
     },

@@ -14,6 +14,20 @@
   }
 }
 
+.tlin-grid-bg {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(181, 151, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 227, 255, 0.05) 1px, transparent 1px);
+}
+
+.text-gradient-tlin {
+  background: linear-gradient(135deg, #B597FF, #38E3FF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 // Global Dark Mode adjustment for incoming bubbles (USER variant)
 .dark .left-bubble .prose-bubble {
   color: white !important;

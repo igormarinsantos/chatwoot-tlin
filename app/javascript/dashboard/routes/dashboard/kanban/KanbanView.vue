@@ -1,17 +1,19 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
 import draggable from 'vuedraggable';
 import ContactCard from './ContactCard.vue';
 import PipelineManager from './components/PipelineManager.vue';
 import LeadSelector from './components/LeadSelector.vue';
+import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 
 const store = useStore();
 const { t } = useI18n();
 
 const showManager = ref(false);
 const activeStageForLead = ref(null);
+const activeDropdownStage = ref(null);
 
 const contacts = computed(() => store.getters['contacts/getContactsList']);
 const customAttributes = computed(() => store.getters['attributes/getContactAttributes']);
@@ -27,13 +29,22 @@ const stages = computed(() => {
   return ['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'];
 });
 
-const getContactsByStage = (stage) => {
-  return contacts.value.filter(contact => {
-    const contactStage = contact.customAttributes?.pipeline_stage;
-    if (!contactStage && stage === 'Lead') return true;
-    return contactStage === stage;
+// Local state for draggable to work correctly
+const localContactsByStage = ref({});
+
+const syncLocalContacts = () => {
+  const newMap = {};
+  stages.value.forEach(stage => {
+    newMap[stage] = contacts.value.filter(contact => {
+      const contactStage = contact.customAttributes?.pipeline_stage;
+      if (!contactStage && stage === 'Lead') return true;
+      return contactStage === stage;
+    });
   });
+  localContactsByStage.value = newMap;
 };
+
+watch([contacts, stages], syncLocalContacts, { immediate: true });
 
 const onMove = (evt, stage) => {
   const { added } = evt;
@@ -47,6 +58,19 @@ const onMove = (evt, stage) => {
       },
     });
   }
+};
+
+const columnActions = (stage) => [
+  {
+    label: 'Configurar Etapas',
+    value: 'configure',
+    icon: 'i-lucide-settings',
+    action: () => { showManager.value = true; activeDropdownStage.value = null; },
+  }
+];
+
+const handleAction = (item) => {
+  if (item.action) item.action();
 };
 
 const ensurePipelineAttribute = async () => {
@@ -73,15 +97,15 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full w-full overflow-hidden bg-n-slate-2 p-8 gap-8">
+  <div class="flex flex-col h-full w-full overflow-hidden bg-n-slate-2 dark:bg-n-solid-1 p-8 gap-8">
     <header class="flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-bold text-n-slate-12 tracking-tight">Funil de vendas</h1>
+        <h1 class="text-3xl font-bold text-n-slate-12 tracking-tight">Funil de Vendas</h1>
         <p class="text-sm text-n-slate-10 mt-1">Gerencie seus leads e oportunidades de forma ágil.</p>
       </div>
       <div class="flex gap-3">
         <button
-          class="px-4 py-2 bg-white border border-n-weak rounded-xl text-sm font-medium hover:bg-n-alpha-1 transition-colors"
+          class="px-4 py-2 bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl text-sm font-medium text-n-slate-12 hover:bg-n-alpha-1 transition-colors"
           @click="showManager = true"
         >
           Configurar Etapas
@@ -93,23 +117,34 @@ onMounted(async () => {
       <div
         v-for="stage in stages"
         :key="stage"
-        class="flex flex-col w-80 flex-shrink-0 bg-white/50 rounded-2xl border border-n-weak shadow-sm"
+        class="flex flex-col w-80 flex-shrink-0 bg-white/50 dark:bg-n-slate-11/10 rounded-2xl border border-n-weak shadow-sm"
       >
-        <div class="p-5 flex items-center justify-between border-b border-n-weak bg-white/30 rounded-t-2xl">
+        <div class="p-5 flex items-center justify-between border-b border-n-weak bg-white/30 dark:bg-n-solid-2 rounded-t-2xl relative">
           <h2 class="font-bold text-n-slate-12 text-sm">
             {{ stage }}
             <span class="ml-2 text-n-slate-9 font-normal text-xs">
-              {{ getContactsByStage(stage).length }}
+              {{ localContactsByStage[stage]?.length || 0 }}
             </span>
           </h2>
-          <button class="p-1 hover:bg-n-alpha-1 rounded-md transition-colors text-n-slate-8">
-            <span class="i-lucide-more-horizontal size-4" />
-          </button>
+          <div class="relative">
+            <button 
+              class="p-1 hover:bg-n-alpha-1 rounded-md transition-colors text-n-slate-8"
+              @click="activeDropdownStage = activeDropdownStage === stage ? null : stage"
+            >
+              <span class="i-lucide-more-horizontal size-4" />
+            </button>
+            <DropdownMenu
+              v-if="activeDropdownStage === stage"
+              class="top-8 right-0"
+              :menu-items="columnActions(stage)"
+              @action="handleAction"
+            />
+          </div>
         </div>
 
         <draggable
           class="flex-1 p-4 overflow-y-auto flex flex-col gap-4 min-h-[200px]"
-          :list="getContactsByStage(stage)"
+          :list="localContactsByStage[stage]"
           group="contacts"
           item-key="id"
           @change="(evt) => onMove(evt, stage)"
@@ -167,7 +202,13 @@ onMounted(async () => {
   background: rgba(0, 0, 0, 0.05);
   border-radius: 10px;
 }
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.1);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 </style>

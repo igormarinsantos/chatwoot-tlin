@@ -21,7 +21,7 @@ const avatarUrl = computed(() => props.contact.thumbnail || '');
 </script>
 
 <template>
-  <div class="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-n-weak group">
+  <div class="bg-white dark:bg-n-solid-2 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-n-weak dark:border-n-weak/50 group">
     <div class="flex items-start gap-3">
       <div class="relative">
         <img

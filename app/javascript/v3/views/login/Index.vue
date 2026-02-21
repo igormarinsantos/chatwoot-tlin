@@ -219,127 +219,190 @@ export default {
 </script>
 
 <template>
-  <main
-    class="relative flex flex-col w-full min-h-screen py-20 overflow-hidden bg-white sm:px-6 lg:px-8"
-  >
-    <!-- Background Abstract Elements -->
-    <div
-      class="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-[#B597FF]/10 rounded-full blur-[120px] animate-blob"
-    />
-    <div
-      class="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-[#38E3FF]/10 rounded-full blur-[120px] animate-blob animation-delay-2000"
-    />
-
-    <section class="relative z-10 max-w-5xl mx-auto">
-      <img
-        :src="globalConfig.logo"
-        :alt="globalConfig.installationName"
-        class="block w-auto h-8 mx-auto"
-      />
-
-      <h2 class="mt-6 text-3xl font-medium text-center text-slate-900">
-        {{ replaceInstallationName($t('LOGIN.TITLE')) }}
-      </h2>
-      <p v-if="showSignupLink" class="mt-3 text-sm text-center text-n-slate-11">
-        {{ $t('COMMON.OR') }}
-        <router-link to="auth/signup" class="lowercase text-link text-n-brand">
-          {{ $t('LOGIN.CREATE_NEW_ACCOUNT') }}
-        </router-link>
-      </p>
-    </section>
-
-    <!-- MFA Verification Section -->
-    <section v-if="mfaRequired" class="mt-11">
-      <MfaVerification
-        :mfa-token="mfaToken"
-        @verified="handleMfaVerified"
-        @cancel="handleMfaCancel"
-      />
-    </section>
-
-    <!-- Regular Login Section -->
-    <section
-      v-else
-      class="bg-white border border-n-weak shadow-lg sm:mx-auto mt-11 sm:w-full sm:max-w-lg p-11 sm:shadow-2xl sm:rounded-2xl"
-      :class="{
-        'mb-8 mt-15': !showGoogleOAuth,
-        'animate-wiggle': loginApi.hasErrored,
-      }"
-    >
-      <div v-if="!email">
-        <div class="flex flex-col gap-4">
-          <GoogleOAuthButton v-if="showGoogleOAuth" />
-          <div v-if="showSamlLogin" class="text-center">
-            <router-link
-              to="/app/login/sso"
-              class="inline-flex justify-center w-full px-4 py-3 items-center bg-n-background rounded-md shadow-sm ring-1 ring-inset ring-n-container focus:outline-offset-0 hover:bg-n-alpha-2"
-            >
-              <Icon
-                icon="i-lucide-lock-keyhole"
-                class="size-5 text-n-slate-11"
-              />
-              <span class="ml-2 text-base font-medium text-n-slate-12">
-                {{ $t('LOGIN.SAML.LABEL') }}
-              </span>
-            </router-link>
-          </div>
-          <SimpleDivider
-            v-if="showGoogleOAuth || showSamlLogin"
-            :label="$t('COMMON.OR')"
-            class="uppercase"
-          />
+  <main class="flex min-h-screen w-full bg-white overflow-hidden font-body">
+    <!-- Left Column: Marketing / Branding (Hidden on Mobile) -->
+    <div class="hidden lg:flex lg:w-1/2 relative bg-n-slate-2 overflow-hidden flex-col p-16 justify-between tlin-grid-bg">
+      <div class="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-[#B597FF]/10 rounded-full blur-[120px] animate-blob" />
+      <div class="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-[#38E3FF]/10 rounded-full blur-[120px] animate-blob animation-delay-2000" />
+      
+      <div class="relative z-10">
+        <div class="flex items-center gap-3 mb-12">
+          <img :src="globalConfig.logo" :alt="globalConfig.installationName" class="h-10 w-auto" />
+          <span class="text-2xl font-bold text-n-slate-12">Tlin.ai</span>
         </div>
-        <form class="space-y-5" @submit.prevent="submitFormLogin">
-          <FormInput
-            v-model="credentials.email"
-            name="email_address"
-            type="text"
-            data-testid="email_input"
-            :tabindex="1"
-            required
-            :label="$t('LOGIN.EMAIL.LABEL')"
-            :placeholder="$t('LOGIN.EMAIL.PLACEHOLDER')"
-            :has-error="v$.credentials.email.$error"
-            @input="v$.credentials.email.$touch"
-          />
-          <FormInput
-            v-model="credentials.password"
-            type="password"
-            name="password"
-            data-testid="password_input"
-            required
-            :tabindex="2"
-            :label="$t('LOGIN.PASSWORD.LABEL')"
-            :placeholder="$t('LOGIN.PASSWORD.PLACEHOLDER')"
-            :has-error="v$.credentials.password.$error"
-            @input="v$.credentials.password.$touch"
-          >
-            <p v-if="!globalConfig.disableUserProfileUpdate">
-              <router-link
-                to="auth/reset/password"
-                class="text-sm font-medium text-n-brand hover:text-n-blue-10"
-                tabindex="4"
-              >
-                {{ $t('LOGIN.FORGOT_PASSWORD') }}
-              </router-link>
-            </p>
-          </FormInput>
-          <NextButton
-            lg
-            type="submit"
-            data-testid="submit_button"
-            class="w-full"
-            :tabindex="3"
-            :label="$t('LOGIN.SUBMIT')"
-            :disabled="loginApi.showLoading"
-            :is-loading="loginApi.showLoading"
-          />
-        </form>
+
+        <div class="mb-8">
+          <div class="inline-flex items-center justify-center p-2 rounded-xl bg-n-brand/10 mb-6 group">
+            <Icon icon="i-lucide-trending-up" class="size-6 text-n-brand group-hover:scale-110 transition-transform" />
+          </div>
+          <h1 class="text-5xl font-bold text-n-slate-12 leading-[1.1] tracking-tight mb-6">
+            Aumente seu <span class="text-gradient-tlin">ROI</span> em até 3x e <span class="text-gradient-tlin">reduza custos operacionais</span>.
+          </h1>
+          <p class="text-lg text-n-slate-10 max-w-lg leading-relaxed">
+            Transforme cada lead de WhatsApp em agendamento real com nossa IA de alta conversão. Atendimento imediato que não deixa dinheiro na mesa.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-4 mt-12">
+          <div class="p-6 bg-white/60 backdrop-blur-md rounded-2xl border border-n-weak hover:shadow-xl hover:shadow-n-brand/5 transition-all w-fit max-w-sm flex items-start gap-4">
+            <div class="size-8 rounded-full bg-n-brand/20 flex items-center justify-center flex-shrink-0">
+              <Icon icon="i-lucide-check-circle-2" class="size-5 text-n-brand" />
+            </div>
+            <div>
+              <h3 class="font-bold text-n-slate-12">Conversão Imbatível</h3>
+              <p class="text-xs text-n-slate-10 mt-1">IA treinada para fechar agendamentos e aumentar seu faturamento.</p>
+            </div>
+          </div>
+          <div class="ml-12 p-6 bg-white/60 backdrop-blur-md rounded-2xl border border-n-weak hover:shadow-xl hover:shadow-n-brand/5 transition-all w-fit max-w-sm flex items-start gap-4">
+            <div class="size-8 rounded-full bg-[#B597FF]/20 flex items-center justify-center flex-shrink-0">
+              <Icon icon="i-lucide-piggy-bank" class="size-5 text-[#B597FF]" />
+            </div>
+            <div>
+              <h3 class="font-bold text-n-slate-12">Redução de Custos</h3>
+              <p class="text-xs text-n-slate-10 mt-1">Diminua sua carga operacional enquanto escala seu atendimento 24/7.</p>
+            </div>
+          </div>
+        </div>
       </div>
-      <div v-else class="flex items-center justify-center">
-        <Spinner color-scheme="primary" size="" />
+
+      <div class="relative z-10 text-xs text-n-slate-9 mt-12">
+        © {{ new Date().getFullYear() }} Tlin.ai. Todos os direitos reservados.
       </div>
-    </section>
+    </div>
+
+    <!-- Right Column: Login Form -->
+    <div class="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-16 relative bg-white">
+      <!-- Mobile Logo -->
+      <div class="lg:hidden absolute top-8 left-8 flex items-center gap-2">
+        <img :src="globalConfig.logo" :alt="globalConfig.installationName" class="h-8 w-auto" />
+        <span class="text-xl font-bold text-n-slate-12">Tlin.ai</span>
+      </div>
+
+      <div class="w-full max-w-md">
+        <div class="mb-10 lg:text-left text-center">
+          <h2 class="text-4xl font-bold text-n-slate-12 tracking-tight mb-3">Bem-vindo ao Futuro</h2>
+          <p class="text-n-slate-10 text-sm">
+            Acesse sua central de inteligência e gerencie sua clínica com tecnologia de elite.
+          </p>
+        </div>
+
+        <!-- MFA Verification Section -->
+        <section v-if="mfaRequired">
+          <MfaVerification
+            :mfa-token="mfaToken"
+            @verified="handleMfaVerified"
+            @cancel="handleMfaCancel"
+          />
+        </section>
+
+        <!-- Regular Login Section -->
+        <section v-else>
+          <div v-if="!email">
+            <div v-if="showGoogleOAuth || showSamlLogin" class="flex flex-col gap-4 mb-8">
+              <GoogleOAuthButton v-if="showGoogleOAuth" />
+              <div v-if="showSamlLogin">
+                <router-link
+                  to="/app/login/sso"
+                  class="inline-flex justify-center w-full px-4 py-3 items-center bg-n-background rounded-md shadow-sm ring-1 ring-inset ring-n-container focus:outline-offset-0 hover:bg-n-alpha-2"
+                >
+                  <Icon icon="i-lucide-lock-keyhole" class="size-5 text-n-slate-11" />
+                  <span class="ml-2 text-base font-medium text-n-slate-12">
+                    {{ $t('LOGIN.SAML.LABEL') }}
+                  </span>
+                </router-link>
+              </div>
+              <SimpleDivider :label="$t('COMMON.OR')" class="uppercase" />
+            </div>
+
+            <form class="space-y-6" @submit.prevent="submitFormLogin">
+              <div class="space-y-1">
+                <label for="email" class="text-sm font-bold text-n-slate-12 block ml-1">E-mail Profissional</label>
+                <FormInput
+                  v-model="credentials.email"
+                  name="email_address"
+                  type="text"
+                  icon="i-lucide-mail"
+                  data-testid="email_input"
+                  :tabindex="1"
+                  required
+                  label=""
+                  placeholder="exemplo@clinica.com.br"
+                  :has-error="v$.credentials.email.$error"
+                  @input="v$.credentials.email.$touch"
+                />
+              </div>
+
+              <div class="space-y-1">
+                <div class="flex justify-between items-end mb-1 px-1">
+                  <label for="password" class="text-sm font-bold text-n-slate-12">Senha</label>
+                  <router-link to="auth/reset/password" class="text-xs font-medium text-n-brand hover:underline">
+                    Esqueci minha senha
+                  </router-link>
+                </div>
+                <FormInput
+                  v-model="credentials.password"
+                  type="password"
+                  name="password"
+                  icon="i-lucide-shield-lock"
+                  data-testid="password_input"
+                  required
+                  :tabindex="2"
+                  label=""
+                  placeholder="••••••••"
+                  :has-error="v$.credentials.password.$error"
+                  @input="v$.credentials.password.$touch"
+                />
+              </div>
+
+              <div class="flex items-center gap-2 px-1">
+                <input type="checkbox" id="remember" class="size-4 accent-n-brand rounded border-n-weak" />
+                <label for="remember" class="text-sm text-n-slate-10 select-none">Lembrar de mim</label>
+              </div>
+
+              <NextButton
+                lg
+                type="submit"
+                data-testid="submit_button"
+                class="w-full !rounded-2xl !py-4 shadow-lg shadow-n-brand/20 active:scale-95 transition-all text-base font-bold bubble-gradient"
+                :tabindex="3"
+                label="Acessar minha Central de IA"
+                :disabled="loginApi.showLoading"
+                :is-loading="loginApi.showLoading"
+              />
+            </form>
+
+            <div class="mt-8 text-center">
+              <p class="text-sm text-n-slate-11">
+                Ainda não tem conta? 
+                <button class="text-n-brand font-bold hover:underline transition-all">
+                  Solicite uma demonstração exclusiva →
+                </button>
+              </p>
+            </div>
+          </div>
+          <div v-else class="flex items-center justify-center p-12">
+            <Spinner color-scheme="primary" />
+          </div>
+        </section>
+
+        <footer class="mt-16 pt-8 border-t border-n-weak flex flex-col items-center gap-4 text-[10px] text-n-slate-8 uppercase tracking-widest font-bold">
+          <div class="flex gap-6">
+            <div class="flex items-center gap-1.5 grayscale opacity-60">
+              <Icon icon="i-lucide-check-shield" class="size-3" />
+              LGPD COMPLIANCE
+            </div>
+            <div class="flex items-center gap-1.5 grayscale opacity-60">
+              <Icon icon="i-lucide-lock" class="size-3" />
+              SSL SECURE
+            </div>
+          </div>
+          <div class="text-center lowercase font-medium">
+            © {{ new Date().getFullYear() }} Tlin.ai. Sua segurança é nossa prioridade.<br/>
+            Dados protegidos conforme as diretrizes da LGPD.
+          </div>
+        </footer>
+      </div>
+    </div>
   </main>
 </template>
 
