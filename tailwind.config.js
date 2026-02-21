@@ -1,6 +1,6 @@
 const { slateDark } = require('@radix-ui/colors');
-const { colors } = require('./theme/colors');
-const { icons } = require('./theme/icons');
+import { colors } from './theme/colors';
+import { icons } from './theme/icons';
 const defaultTheme = require('tailwindcss/defaultTheme');
 const {
   iconsPlugin,
@@ -46,8 +46,7 @@ const tailwindConfig = {
         interDisplay: ['InterDisplay', ...defaultSansFonts],
       },
       backgroundImage: {
-        'tlin-gradient': 'linear-gradient(90deg, #B597FF 0%, #38E3FF 100%)',
-        'tlin-gradient-reverse': 'linear-gradient(90deg, #38E3FF 0%, #B597FF 100%)',
+        'tlin-gradient': 'linear-gradient(135deg, #B597FF 0%, #38E3FF 100%)',
       },
       fontWeight: {
         420: '420',
@@ -269,18 +268,6 @@ const tailwindConfig = {
     },
   },
   plugins: [
-    function({ addUtilities }) {
-      addUtilities({
-        '.border-tlin-gradient': {
-          'border-image-source': 'linear-gradient(90deg, #B597FF 0%, #38E3FF 100%)',
-          'border-image-slice': '1',
-        },
-        '.border-tlin-gradient-reverse': {
-          'border-image-source': 'linear-gradient(90deg, #38E3FF 0%, #B597FF 100%)',
-          'border-image-slice': '1',
-        },
-      });
-    },
     // eslint-disable-next-line
     require('@tailwindcss/typography'),
     iconsPlugin({

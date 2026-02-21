@@ -5,7 +5,7 @@ export const setColorTheme = isOSOnDarkMode => {
   const selectedColorScheme =
     LocalStorage.get(LOCAL_STORAGE_KEYS.COLOR_SCHEME) || 'auto';
   if (
-    (selectedColorScheme === 'auto' && isOSOnDarkMode) ||
+    (selectedColorScheme === 'auto' && isOSOnDarkMode && false) ||
     selectedColorScheme === 'dark'
   ) {
     document.body.classList.add('dark');
