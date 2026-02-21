@@ -141,7 +141,7 @@ export default {
     />
 
     <main
-      class="flex flex-1 h-full w-full min-h-0 px-0 overflow-hidden bg-white border-t-4 border-n-brand rounded-tl-[3rem] shadow-inner"
+      class="flex flex-1 h-full w-full min-h-0 px-0 overflow-hidden bg-white border-t-2 border-n-brand"
     >
       <UpgradePage
         v-show="showUpgradePage"

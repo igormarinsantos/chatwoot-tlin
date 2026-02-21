@@ -220,44 +220,49 @@ export default {
 
 <template>
   <main
-    class="flex flex-col w-full min-h-screen py-20 bg-white animated-tlin-bg sm:px-6 lg:px-8"
+    class="relative flex flex-col w-full min-h-screen py-20 bg-white overflow-hidden sm:px-6 lg:px-8"
   >
-    <section class="max-w-5xl mx-auto">
-      <img
-        :src="globalConfig.logo"
-        :alt="globalConfig.installationName"
-        class="block w-auto h-12 mx-auto"
-      />
+    <!-- Background Blobs -->
+    <div class="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-[#B597FF]/10 rounded-full blur-[100px] animate-blob" />
+    <div class="absolute bottom-[-10%] right-[-10%] w-[35rem] h-[35rem] bg-[#38E3FF]/10 rounded-full blur-[100px] animate-blob animation-delay-2000" />
+    
+    <div class="relative z-10 w-full flex flex-col items-center">
+      <section class="max-w-5xl mx-auto w-full">
+        <img
+          :src="globalConfig.logo"
+          :alt="globalConfig.installationName"
+          class="block w-auto h-12 mx-auto"
+        />
 
-      <h2 class="mt-6 text-3xl font-medium text-center text-slate-900">
-        {{ replaceInstallationName($t('LOGIN.TITLE')) }}
-      </h2>
-      <p v-if="showSignupLink" class="mt-3 text-sm text-center text-n-slate-11">
-        {{ $t('COMMON.OR') }}
-        <router-link to="auth/signup" class="lowercase text-link text-n-brand">
-          {{ $t('LOGIN.CREATE_NEW_ACCOUNT') }}
-        </router-link>
-      </p>
-    </section>
+        <h2 class="mt-6 text-3xl font-medium text-center text-slate-900">
+          {{ replaceInstallationName($t('LOGIN.TITLE')) }}
+        </h2>
+        <p v-if="showSignupLink" class="mt-3 text-sm text-center text-n-slate-11">
+          {{ $t('COMMON.OR') }}
+          <router-link to="auth/signup" class="lowercase text-link text-n-brand">
+            {{ $t('LOGIN.CREATE_NEW_ACCOUNT') }}
+          </router-link>
+        </p>
+      </section>
 
-    <!-- MFA Verification Section -->
-    <section v-if="mfaRequired" class="mt-11">
-      <MfaVerification
-        :mfa-token="mfaToken"
-        @verified="handleMfaVerified"
-        @cancel="handleMfaCancel"
-      />
-    </section>
+      <!-- MFA Verification Section -->
+      <section v-if="mfaRequired" class="mt-11 w-full max-w-lg">
+        <MfaVerification
+          :mfa-token="mfaToken"
+          @verified="handleMfaVerified"
+          @cancel="handleMfaCancel"
+        />
+      </section>
 
-    <!-- Regular Login Section -->
-    <section
-      v-else
-      class="bg-white border border-n-weak/30 shadow-2xl sm:mx-auto mt-11 sm:w-full sm:max-w-lg p-12 sm:rounded-[3rem] relative tlin-gradient-border"
-      :class="{
-        'mb-8 mt-15': !showGoogleOAuth,
-        'animate-wiggle': loginApi.hasErrored,
-      }"
-    >
+      <!-- Regular Login Section -->
+      <section
+        v-else
+        class="bg-white border border-n-weak/30 shadow-2xl sm:mx-auto mt-11 sm:w-full sm:max-w-lg p-12 sm:rounded-[3rem] relative tlin-gradient-border"
+        :class="{
+          'mb-8 mt-15': !showGoogleOAuth,
+          'animate-wiggle': loginApi.hasErrored,
+        }"
+      >
       <div v-if="!email">
         <div class="flex flex-col gap-4">
           <GoogleOAuthButton v-if="showGoogleOAuth" />
@@ -335,22 +340,26 @@ export default {
   </main>
 </template>
 
-<style scoped>
-@keyframes gradientAnimation {
+@keyframes blob {
   0% {
-    background-position: 0% 50%;
+    transform: translate(0px, 0px) scale(1);
   }
-  50% {
-    background-position: 100% 50%;
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
   }
   100% {
-    background-position: 0% 50%;
+    transform: translate(0px, 0px) scale(1);
   }
 }
 
-.animated-tlin-bg {
-  background: linear-gradient(-45deg, #ffffff, #f7fafc, #b597ff15, #38e3ff15);
-  background-size: 400% 400%;
-  animation: gradientAnimation 15s ease infinite;
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
 }
 </style>

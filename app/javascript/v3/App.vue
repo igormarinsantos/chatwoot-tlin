@@ -14,8 +14,8 @@ export default {
   methods: {
     setColorTheme() {
       const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches && false)) {
-        // Disabled auto-dark to follow user's "native light" request
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
         this.theme = 'dark';
         document.documentElement.classList.add('dark');
       } else {
@@ -28,12 +28,14 @@ export default {
       const mql = window.matchMedia('(prefers-color-scheme: dark)');
 
       mql.onchange = e => {
-        if (e.matches) {
-          this.theme = 'dark';
-          document.documentElement.classList.add('dark');
-        } else {
-          this.theme = 'light';
-          document.documentElement.classList.remove('dark');
+        if (!localStorage.getItem('theme')) {
+          if (e.matches) {
+            this.theme = 'dark';
+            document.documentElement.classList.add('dark');
+          } else {
+            this.theme = 'light';
+            document.documentElement.classList.remove('dark');
+          }
         }
       };
     },
@@ -70,7 +72,7 @@ body {
 }
 
 .text-link {
-  @apply text-n-brand font-medium hover:text-n-blue-10;
+  @apply text-n-brand font-medium hover:brightness-110;
 }
 
 .v-popper--theme-tooltip .v-popper__inner {
@@ -103,6 +105,6 @@ body {
   z-index: -1;
   margin: -1.5px;
   border-radius: inherit;
-  background: linear-gradient(90deg, #38E3FF, #B597FF);
+  background: linear-gradient(90deg, #B597FF, #38E3FF);
 }
 </style>
