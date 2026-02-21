@@ -11,8 +11,9 @@ import { useBranding } from 'shared/composables/useBranding';
 
 // components
 import SimpleDivider from '../../components/Divider/SimpleDivider.vue';
-import FormInput from '../../components/Form/Input.vue';
-import GoogleOAuthButton from '../../components/GoogleOauth/Button.vue';
+import FormInput from '../../components/FormInput.vue';
+import Logo from 'dashboard/components-next/icon/Logo.vue';
+import GoogleOAuthButton from './GoogleOAuthButton.vue';
 import Spinner from 'shared/components/Spinner.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
@@ -30,6 +31,7 @@ const IMPERSONATION_URL_SEARCH_KEY = 'impersonation';
 export default {
   components: {
     FormInput,
+    Logo,
     GoogleOAuthButton,
     Spinner,
     NextButton,
@@ -231,11 +233,7 @@ export default {
     />
 
     <section class="relative z-10 max-w-5xl mx-auto">
-      <img
-        :src="globalConfig.logo"
-        :alt="globalConfig.installationName"
-        class="block w-auto h-8 mx-auto"
-      />
+      <Logo class="w-auto h-12 mx-auto" />
 
       <h2 class="mt-6 text-3xl font-medium text-center text-slate-900">
         {{ replaceInstallationName($t('LOGIN.TITLE')) }}
@@ -260,7 +258,7 @@ export default {
     <!-- Regular Login Section -->
     <section
       v-else
-      class="bg-white border border-n-weak shadow sm:mx-auto mt-11 sm:w-full sm:max-w-lg p-11 sm:shadow-xl sm:rounded-2xl"
+      class="premium-border bg-white border border-n-weak shadow sm:mx-auto mt-11 sm:w-full sm:max-w-lg p-11 sm:shadow-xl sm:rounded-2xl"
       :class="{
         'mb-8 mt-15': !showGoogleOAuth,
         'animate-wiggle': loginApi.hasErrored,
@@ -326,6 +324,8 @@ export default {
           </FormInput>
           <NextButton
             lg
+            solid
+            blue
             type="submit"
             data-testid="submit_button"
             class="w-full"
