@@ -1,6 +1,7 @@
 /* eslint arrow-body-style: 0 */
 import { frontendURL } from '../../../helper/URLHelper';
 import ConversationView from './ConversationView.vue';
+import KanbanView from '../kanban/KanbanView.vue';
 
 const CONVERSATION_PERMISSIONS = [
   'administrator',
@@ -12,6 +13,14 @@ const CONVERSATION_PERMISSIONS = [
 
 export default {
   routes: [
+    {
+      path: frontendURL('accounts/:accountId/kanban'),
+      name: 'kanban_view',
+      meta: {
+        permissions: CONVERSATION_PERMISSIONS,
+      },
+      component: KanbanView,
+    },
     {
       path: frontendURL('accounts/:accountId/dashboard'),
       name: 'home',
