@@ -2,6 +2,16 @@
   background: linear-gradient(135deg, #B597FF 0%, #38E3FF 100%) !important;
   color: white !important;
   border: none !important;
+
+  // Force white for all text elements and icons inside
+  * {
+    color: white !important;
+  }
+  
+  // Specifically target the blue status icon color
+  .text-\[\#7EB6FF\], .text-n-slate-10 {
+    color: white !important;
+  }
 }
 
 .premium-border {
@@ -54,12 +64,10 @@
   100% { left: 100%; transition-property: left; }
 }
 
-.tlin-button-shiny {
+// Button shine effect reserved for specific cases if needed
+.tlin-button-shiny-effect {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(90deg, #38E3FF, #B597FF, #38E3FF) !important;
-  background-size: 200% auto !important;
-  animation: shine 3s linear infinite !important;
   
   &::after {
     content: '';

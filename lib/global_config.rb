@@ -15,6 +15,8 @@ class GlobalConfig
       typecast_config(config)
       config['INSTALLATION_NAME'] = 'Tlin' if config['INSTALLATION_NAME'] == 'Chatwoot'
       config['BRAND_NAME'] = 'Tlin' if config['BRAND_NAME'] == 'Chatwoot'
+      config['LOGO'] = '/brand-assets/logo.svg' if config['LOGO'].to_s.include?('chatwoot') || config['LOGO'].blank?
+      config['LOGO_THUMBNAIL'] = '/brand-assets/logo_thumbnail.svg' if config['LOGO_THUMBNAIL'].to_s.include?('chatwoot') || config['LOGO_THUMBNAIL'].blank?
 
       config.with_indifferent_access
     end

@@ -2,24 +2,22 @@
 import { computed } from 'vue';
 
 const props = defineProps({
-  conversation: {
+  contact: {
     type: Object,
     required: true,
   },
 });
 
-const contactName = computed(() => props.conversation.meta.sender.name || 'Unknown');
-const lastMessage = computed(() => {
-  const lastMsg = props.conversation.messages[props.conversation.messages.length - 1];
-  return lastMsg ? lastMsg.content : 'No messages';
-});
-const inboxName = computed(() => props.conversation.inbox_name || 'Inbox');
+const contactName = computed(() => props.contact.name || 'Unknown');
+const email = computed(() => props.contact.email || '');
+const phone = computed(() => props.contact.phoneNumber || '');
 const lastActivityAt = computed(() => {
-  const date = new Date(props.conversation.last_activity_at * 1000);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (!props.contact.lastActivityAt) return '';
+  const date = new Date(props.contact.lastActivityAt * 1000);
+  return date.toLocaleDateString();
 });
 
-const avatarUrl = computed(() => props.conversation.meta.sender.thumbnail || '');
+const avatarUrl = computed(() => props.contact.thumbnail || '');
 </script>
 
 <template>
@@ -37,9 +35,6 @@ const avatarUrl = computed(() => props.conversation.meta.sender.thumbnail || '')
         >
           {{ contactName.charAt(0).toUpperCase() }}
         </div>
-        <div class="absolute -bottom-1 -right-1 size-4 bg-white rounded-full flex items-center justify-center shadow-sm">
-           <span class="i-lucide-message-square size-2.5 text-n-slate-10" />
-        </div>
       </div>
 
       <div class="flex-1 min-w-0">
@@ -52,24 +47,18 @@ const avatarUrl = computed(() => props.conversation.meta.sender.thumbnail || '')
           </span>
         </div>
         
-        <p class="text-xs text-n-slate-10 line-clamp-2 mb-3 leading-relaxed">
-          {{ lastMessage }}
+        <p class="text-xs text-n-slate-10 truncate mb-2">
+          {{ email || phone || t('CONTACT_PANEL.NO_TEXT') }}
         </p>
 
         <div class="flex items-center gap-2 mt-auto">
-          <span class="px-2 py-0.5 bg-n-alpha-1 border border-n-weak rounded text-[10px] text-n-slate-11 font-medium">
-            {{ inboxName }}
-          </span>
-          <div v-if="conversation.labels && conversation.labels.length" class="flex gap-1 overflow-hidden">
+          <div v-if="contact.labels && contact.labels.length" class="flex gap-1 overflow-hidden">
             <span
-              v-for="label in conversation.labels.slice(0, 1)"
+              v-for="label in contact.labels.slice(0, 2)"
               :key="label"
               class="px-2 py-0.5 bg-n-brand/5 border border-n-brand/20 rounded text-[10px] text-n-brand font-medium truncate"
             >
               #{{ label }}
-            </span>
-            <span v-if="conversation.labels.length > 1" class="text-[10px] text-n-slate-8">
-              +{{ conversation.labels.length - 1 }}
             </span>
           </div>
         </div>

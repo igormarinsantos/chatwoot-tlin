@@ -101,7 +101,7 @@ const STYLE_CONFIG = {
   colors: {
     blue: {
       solid:
-        'tlin-button-shiny text-white font-bold rounded-2xl hover:enabled:scale-[1.02] focus-visible:scale-[1.02] transition-transform duration-200 outline-transparent border-none',
+        'bg-[#B597FF] hover:bg-[#a07df5] text-white font-bold rounded-2xl hover:enabled:scale-[1.02] focus-visible:scale-[1.02] transition-transform duration-200 outline-transparent border-none shadow-sm',
       faded:
         'bg-n-brand/10 text-n-iris-11 hover:enabled:bg-n-brand/20 focus-visible:bg-n-brand/20 outline-transparent',
       outline: 'text-n-iris-11 outline-n-brand',
