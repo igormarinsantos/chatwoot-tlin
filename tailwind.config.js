@@ -47,6 +47,7 @@ const tailwindConfig = {
       },
       backgroundImage: {
         'tlin-gradient': 'linear-gradient(135deg, #B597FF 0%, #38E3FF 100%)',
+        'tlin-shiny-gradient': 'linear-gradient(90deg, #38E3FF, #B597FF, #38E3FF)',
       },
       fontWeight: {
         420: '420',
@@ -248,6 +249,11 @@ const tailwindConfig = {
         '50%': { transform: 'translateX(-0.234375rem)' },
         '75%': { transform: 'translateX(0.234375rem)' },
       },
+      shine: {
+        '0%': { 'background-position': '0% 50%' },
+        '50%': { 'background-position': '100% 50%' },
+        '100%': { 'background-position': '0% 50%' },
+      },
     },
     animation: {
       ...defaultTheme.animation,
@@ -257,6 +263,7 @@ const tailwindConfig = {
       'card-select': 'card-select 0.25s ease-in-out',
       shake: 'shake 0.3s ease-in-out 0s 2',
       'tlin-gradient-move': 'tlin-gradient-move 3s ease infinite',
+      shine: 'shine 3s linear infinite',
     },
     extend: {
       keyframes: {
