@@ -271,7 +271,16 @@ const tailwindConfig = {
           '0%, 100%': { 'background-size': '200% 200%', 'background-position': 'left center' },
           '50%': { 'background-size': '200% 200%', 'background-position': 'right center' },
         },
+        'float-slow': {
+          '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+          '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+          '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+        },
       },
+      animation: {
+        'float-slow': 'float-slow 20s ease-in-out infinite',
+        'float-medium': 'float-slow 15s ease-in-out infinite reverse',
+      }
     },
   },
   plugins: [

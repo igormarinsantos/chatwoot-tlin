@@ -1,0 +1,51 @@
+.bubble-gradient {
+  background: linear-gradient(135deg, #B597FF 0%, #38E3FF 100%) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.premium-border {
+  position: relative;
+  background: white;
+  background-clip: padding-box;
+  border: 1px solid transparent;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px; bottom: -2px;
+    left: -2px; right: -2px;
+    background: linear-gradient(135deg, #B597FF, #38E3FF);
+    z-index: -1;
+    border-radius: inherit;
+    opacity: 0.8;
+  }
+}
+
+.tlin-bg-blobs {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+  background: #ffffff;
+  
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.15;
+  }
+  
+  .blob-1 {
+    width: 800px; height: 800px;
+    background: #B597FF;
+    top: -200px; right: -100px;
+  }
+  
+  .blob-2 {
+    width: 700px; height: 700px;
+    background: #38E3FF;
+    bottom: -150px; left: -100px;
+  }
+}

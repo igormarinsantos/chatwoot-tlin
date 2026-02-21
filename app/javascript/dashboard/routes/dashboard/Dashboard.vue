@@ -130,7 +130,11 @@ export default {
 </script>
 
 <template>
-  <div class="flex flex-grow overflow-hidden text-n-slate-12">
+  <div class="relative flex flex-grow overflow-hidden text-n-slate-12">
+    <div class="tlin-bg-blobs">
+      <div class="blob blob-1 animate-float-slow" />
+      <div class="blob blob-2 animate-float-medium" />
+    </div>
     <NextSidebar
       :is-mobile-sidebar-open="isMobileSidebarOpen"
       @toggle-account-modal="toggleAccountModal"
@@ -141,11 +145,12 @@ export default {
     />
 
     <main
-      class="flex flex-1 h-full w-full min-h-0 px-0 overflow-hidden bg-n-surface-1 border-t-2 border-n-brand"
+      class="relative z-10 flex flex-1 h-full w-full min-h-0 px-0 overflow-hidden bg-white/40 backdrop-blur-sm border-t-2 border-n-brand"
     >
       <UpgradePage
         v-show="showUpgradePage"
         ref="upgradePageRef"
+        class="premium-border rounded-xl margin-4"
         :bypass-upgrade-page="bypassUpgradePage"
       >
         <MobileSidebarLauncher
