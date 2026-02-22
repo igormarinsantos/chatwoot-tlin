@@ -13,6 +13,7 @@ onMounted(async () => {
   await store.dispatch('contacts/get');
   await store.dispatch('agents/get');
   await store.dispatch('attributes/get');
+  await store.dispatch('campaigns/get');
 });
 </script>
 
@@ -23,10 +24,16 @@ onMounted(async () => {
       <p class="text-n-slate-10">Gerencie seus compromissos e eventos de forma centralizada.</p>
     </header>
 
-    <div class="flex-1 overflow-hidden bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak p-6 shadow-sm">
+    <div class="flex-1 overflow-hidden bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak p-2 md:p-6 shadow-sm">
       <AgendaView 
         @schedule="(date) => { selectedDate = date; showAppointmentModal = true; }"
-        @select="(app) => { $router.push({ name: 'contact_profile', params: { contactId: app.id } }) }"
+        @select="(app) => { 
+          if (app.conversation_id) {
+            $router.push({ name: 'messages', params: { conversationId: app.conversation_id } });
+          } else {
+            $router.push({ name: 'contact_profile', params: { contactId: app.id } });
+          }
+        }"
       />
     </div>
 
