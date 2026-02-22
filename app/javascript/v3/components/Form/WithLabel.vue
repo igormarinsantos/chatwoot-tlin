@@ -24,11 +24,10 @@ defineProps({
     </label>
     <div class="w-full">
       <div class="flex items-center relative w-full">
-        <fluent-icon
+        <span
           v-if="icon"
-          size="16"
-          :icon="icon"
-          class="absolute left-2 transform text-n-slate-9 w-5 h-5"
+          class="absolute top-[13px] left-3 z-10 pointer-events-none text-n-slate-10 transition-colors group-focus-within:text-n-brand"
+          :class="icon"
         />
         <slot />
       </div>

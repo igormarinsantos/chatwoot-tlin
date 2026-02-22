@@ -226,10 +226,9 @@ export default {
       <div class="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-[#38E3FF]/10 rounded-full blur-[120px] animate-blob animation-delay-2000" />
       
       <div class="relative z-10">
-        <div class="flex items-center gap-3 mb-12">
-          <img :src="globalConfig.logo" :alt="globalConfig.installationName" class="h-10 w-auto" />
-          <span class="text-2xl font-bold text-n-slate-12">Tlin.ai</span>
-        </div>
+        <div class="flex items-center gap-2 mb-12 md:mb-16 justify-center lg:justify-start">
+        <Logo class="size-8" />
+      </div>
 
         <div class="mb-8">
           <div class="inline-flex items-center justify-center p-2 rounded-xl bg-n-brand/10 mb-6 group">
@@ -243,26 +242,31 @@ export default {
           </p>
         </div>
 
-        <div class="flex flex-col gap-4 mt-12">
-          <div class="p-6 bg-white/60 backdrop-blur-md rounded-2xl border border-n-weak hover:shadow-xl hover:shadow-n-brand/5 transition-all w-fit max-w-sm flex items-start gap-4">
-            <div class="size-8 rounded-full bg-n-brand/20 flex items-center justify-center flex-shrink-0">
-              <Icon icon="i-lucide-check-circle-2" class="size-5 text-n-brand" />
+        <div class="space-y-6 max-w-lg mx-auto lg:mx-0">
+        <div class="bg-white/80 dark:bg-n-solid-2 backdrop-blur-md p-6 rounded-3xl border border-n-weak shadow-sm hover:shadow-md transition-all">
+          <div class="flex items-center gap-4">
+            <div class="size-12 rounded-2xl bg-n-brand/10 flex items-center justify-center">
+              <span class="i-lucide-check-circle-2 size-6 text-n-brand" />
             </div>
             <div>
               <h3 class="font-bold text-n-slate-12">Conversão Imbatível</h3>
-              <p class="text-xs text-n-slate-10 mt-1">IA treinada para fechar agendamentos e aumentar seu faturamento.</p>
-            </div>
-          </div>
-          <div class="ml-12 p-6 bg-white/60 backdrop-blur-md rounded-2xl border border-n-weak hover:shadow-xl hover:shadow-n-brand/5 transition-all w-fit max-w-sm flex items-start gap-4">
-            <div class="size-8 rounded-full bg-[#B597FF]/20 flex items-center justify-center flex-shrink-0">
-              <Icon icon="i-lucide-piggy-bank" class="size-5 text-[#B597FF]" />
-            </div>
-            <div>
-              <h3 class="font-bold text-n-slate-12">Redução de Custos</h3>
-              <p class="text-xs text-n-slate-10 mt-1">Diminua sua carga operacional enquanto escala seu atendimento 24/7.</p>
+              <p class="text-sm text-n-slate-10">IA treinada para fechar agendamentos e aumentar seu faturamento.</p>
             </div>
           </div>
         </div>
+
+        <div class="bg-white/80 dark:bg-n-solid-2 backdrop-blur-md p-6 rounded-3xl border border-n-weak shadow-sm hover:shadow-md transition-all">
+          <div class="flex items-center gap-4">
+            <div class="size-12 rounded-2xl bg-n-brand/10 flex items-center justify-center">
+              <span class="i-lucide-shrimp size-6 text-n-brand" />
+            </div>
+            <div>
+              <h3 class="font-bold text-n-slate-12">Redução de Custos</h3>
+              <p class="text-sm text-n-slate-10">Diminua sua carga operacional enquanto escala seu atendimento 24/7.</p>
+            </div>
+          </div>
+        </div>
+      </div>
       </div>
 
       <div class="relative z-10 text-xs text-n-slate-9 mt-12">
@@ -279,10 +283,13 @@ export default {
       </div>
 
       <div class="w-full max-w-md">
-        <div class="mb-10 lg:text-left text-center">
-          <h2 class="text-4xl font-bold text-n-slate-12 tracking-tight mb-3">Bem-vindo ao Futuro</h2>
-          <p class="text-n-slate-10 text-sm">
-            Acesse sua central de inteligência e gerencie sua clínica com tecnologia de elite.
+        <div class="mb-8 text-center lg:text-left">
+          <h1 class="text-3xl font-bold text-n-slate-12 mb-2">
+            Bem-vindo ao Futuro
+          </h1>
+          <p class="text-n-slate-10 mb-8">
+            Acesse sua central de inteligência e gerencie sua clínica com
+            tecnologia de elite.
           </p>
         </div>
 
@@ -370,6 +377,22 @@ export default {
                 :is-loading="loginApi.showLoading"
               />
             </form>
+
+            <div class="flex items-center mb-8 text-sm flex-wrap gap-2 justify-center lg:justify-between">
+          <label class="flex items-center gap-2 cursor-pointer group text-n-slate-11">
+            <input
+              type="checkbox"
+              class="size-4 rounded border-n-weak text-n-brand focus:ring-n-brand bg-n-alpha-black2 transition-all"
+            />
+            <span class="group-hover:text-n-slate-12 transition-colors">Lembrar de mim</span>
+          </label>
+          <RouterLink
+            :to="{ name: 'login_password_recovery' }"
+            class="text-n-brand hover:text-n-brand-strong font-medium transition-colors"
+          >
+            Esqueci minha senha
+          </RouterLink>
+        </div>
 
             <div class="mt-8 text-center">
               <p class="text-sm text-n-slate-11">

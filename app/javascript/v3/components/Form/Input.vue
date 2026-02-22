@@ -76,17 +76,21 @@ const currentInputType = computed(() => {
       v-model="model"
       :name="name"
       :type="currentInputType"
-      class="block w-full border-none rounded-md shadow-sm bg-n-alpha-black2 appearance-none outline outline-1 focus:outline focus:outline-1 text-n-slate-12 placeholder:text-n-slate-10 sm:text-sm sm:leading-6 px-3 py-3"
-      :class="{
-        'error outline-n-ruby-8 dark:outline-n-ruby-8 hover:outline-n-ruby-9 dark:hover:outline-n-ruby-9 disabled:outline-n-ruby-8 dark:disabled:outline-n-ruby-8':
-          hasError,
-        'outline-n-weak dark:outline-n-weak hover:outline-n-slate-6 dark:hover:outline-n-slate-6 focus:outline-n-brand dark:focus:outline-n-brand':
-          !hasError,
-        'px-3 py-3': spacing === 'base',
-        'px-3 py-2 mb-0': spacing === 'compact',
-        'pl-9': icon,
-        'pr-10': isPasswordField,
-      }"
+      class="block w-full border-none rounded-md shadow-sm bg-n-alpha-black2 appearance-none outline outline-1 focus:outline focus:outline-1 text-n-slate-12 placeholder:text-n-slate-10 sm:text-sm sm:leading-6"
+      :class="[
+        {
+          'error outline-n-ruby-8 dark:outline-n-ruby-8 hover:outline-n-ruby-9 dark:hover:outline-n-ruby-9 disabled:outline-n-ruby-8 dark:disabled:outline-n-ruby-8':
+            hasError,
+          'outline-n-weak dark:outline-n-weak hover:outline-n-slate-6 dark:hover:outline-n-slate-6 focus:outline-n-brand dark:focus:outline-n-brand':
+            !hasError,
+          'px-3 py-3': spacing === 'base',
+          'px-3 py-2 mb-0': spacing === 'compact',
+          'ltr:pl-10 ltr:pr-3 rtl:pr-10 rtl:pl-3': icon,
+          'px-3': !icon,
+          'pr-10': isPasswordField,
+        },
+        $attrs.class,
+      ]"
     />
     <Button
       v-if="isPasswordField"
