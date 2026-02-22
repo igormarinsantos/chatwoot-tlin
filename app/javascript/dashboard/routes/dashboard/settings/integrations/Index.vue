@@ -12,9 +12,16 @@ const { replaceInstallationName } = useBranding();
 
 const uiFlags = getters['integrations/getUIFlags'];
 
-const integrationList = computed(
-  () => getters['integrations/getAppIntegrations'].value
-);
+const integrationList = computed(() => [
+  ...getters['integrations/getAppIntegrations'].value,
+  {
+    id: 'calendar',
+    name: 'Agenda Externa',
+    description: 'Sincronize seus compromissos com Google Calendar e Outlook.',
+    logo: 'i-lucide-calendar',
+    enabled: true,
+  }
+]);
 
 onMounted(() => {
   store.dispatch('integrations/get');

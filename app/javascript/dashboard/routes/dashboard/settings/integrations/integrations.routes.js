@@ -10,6 +10,7 @@ import SettingsContent from '../Wrapper.vue';
 import Linear from './Linear.vue';
 import Notion from './Notion.vue';
 import Shopify from './Shopify.vue';
+import Calendar from './Calendar.vue';
 
 export default {
   routes: [
@@ -109,6 +110,14 @@ export default {
             permissions: ['administrator'],
           },
           props: route => ({ error: route.query.error }),
+        },
+        {
+          path: 'calendar',
+          name: 'settings_integrations_calendar',
+          component: Calendar,
+          meta: {
+            permissions: ['administrator'],
+          },
         },
         {
           path: ':integration_id',

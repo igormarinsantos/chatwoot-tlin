@@ -48,6 +48,27 @@ export const initalizeRouter = () => {
       return validateAuthenticateRoutePermission(to, next, store);
     });
   });
+
+  const ROUTE_TITLES = {
+    inbox_view: 'Caixa de Entrada',
+    inbox_view_conversation: 'Caixa de Entrada',
+    kanban_view: 'Funil de Vendas',
+    agenda_view: 'Agenda',
+    home: 'Conversas',
+    messages: 'Conversas',
+    contacts_dashboard_index: 'Contatos',
+    contacts_edit: 'Contatos',
+    account_overview_reports: 'Relatórios',
+    agent_reports_index: 'Relatórios',
+    general_settings_index: 'Configurações',
+    settings_wrapper: 'Configurações',
+    campaigns_livechat_index: 'Campanhas',
+  };
+
+  router.afterEach(to => {
+    const pageTitle = ROUTE_TITLES[to.name] || 'App';
+    document.title = `Tlin | ${pageTitle}`;
+  });
 };
 
 export default router;
