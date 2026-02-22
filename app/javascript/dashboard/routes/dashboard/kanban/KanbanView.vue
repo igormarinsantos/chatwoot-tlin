@@ -7,8 +7,6 @@ import ContactCard from './ContactCard.vue';
 import PipelineManager from './components/PipelineManager.vue';
 import LeadSelector from './components/LeadSelector.vue';
 import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
-import AgendaView from './AgendaView.vue';
-import AppointmentModal from './components/AppointmentModal.vue';
 
 const store = useStore();
 const { t } = useI18n();
@@ -16,9 +14,6 @@ const { t } = useI18n();
 const showManager = ref(false);
 const activeStageForLead = ref(null);
 const activeDropdownStage = ref(null);
-const viewMode = ref('kanban'); // 'kanban' or 'agenda'
-const showAppointmentModal = ref(false);
-const selectedDate = ref(new Date());
 
 const contacts = computed(() => store.getters['contacts/getContactsList']);
 const customAttributes = computed(() => store.getters['attributes/getContactAttributes']);
@@ -144,35 +139,15 @@ onMounted(async () => {
         <h1 class="text-3xl font-bold text-n-slate-12 tracking-tight">Funil de Vendas</h1>
         <p class="text-sm text-n-slate-10 mt-1">Gerencie seus leads e oportunidades de forma ágil.</p>
       </div>
-      <div class="flex gap-4 items-center">
-        <div class="flex bg-white dark:bg-n-solid-2 p-1 rounded-2xl border border-n-weak">
-          <button
-            class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
-            :class="viewMode === 'kanban' ? 'bg-n-brand text-white shadow-lg shadow-n-brand/20' : 'text-n-slate-10 hover:text-n-slate-12'"
-            @click="viewMode = 'kanban'"
-          >
-            <span class="i-lucide-layout-kanban size-4" />
-            Funil
-          </button>
-          <button
-            class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
-            :class="viewMode === 'agenda' ? 'bg-n-brand text-white shadow-lg shadow-n-brand/20' : 'text-n-slate-10 hover:text-n-slate-12'"
-            @click="viewMode = 'agenda'"
-          >
-            <span class="i-lucide-calendar size-4" />
-            Agenda
-          </button>
-        </div>
-        <button
-          class="px-5 py-2.5 bg-n-brand/10 text-n-brand border border-n-brand/20 rounded-xl text-sm font-bold hover:bg-n-brand/20 transition-all active:scale-95"
-          @click="showManager = true"
-        >
-          Configurar Etapas
-        </button>
-      </div>
+      <button
+        class="px-5 py-2.5 bg-n-brand/10 text-n-brand border border-n-brand/20 rounded-xl text-sm font-bold hover:bg-n-brand/20 transition-all active:scale-95"
+        @click="showManager = true"
+      >
+        Configurar Etapas
+      </button>
     </header>
 
-    <div v-if="viewMode === 'kanban'" class="flex flex-1 gap-6 overflow-x-auto pb-6 custom-scrollbar">
+    <div class="flex flex-1 gap-6 overflow-x-auto pb-6 custom-scrollbar">
       <div
         v-for="stage in stages"
         :key="stage"
@@ -235,19 +210,7 @@ onMounted(async () => {
       </button>
     </div>
 
-    <div v-else class="flex-1 overflow-hidden">
-      <AgendaView 
-        @schedule="(date) => { selectedDate = date; showAppointmentModal = true; }"
-        @select="(app) => { $router.push({ name: 'contact_profile', params: { contactId: app.id } }) }"
-      />
-    </div>
-
     <!-- Modals -->
-    <AppointmentModal
-      v-if="showAppointmentModal"
-      :initial-date="selectedDate"
-      @close="showAppointmentModal = false"
-    />
 
     <!-- Transition or just v-if for modal -->
     <PipelineManager

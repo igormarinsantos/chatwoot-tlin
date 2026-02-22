@@ -258,7 +258,7 @@ export default {
         <div class="bg-white/80 dark:bg-n-solid-2 backdrop-blur-md p-6 rounded-3xl border border-n-weak shadow-sm hover:shadow-md transition-all">
           <div class="flex items-center gap-4">
             <div class="size-12 rounded-2xl bg-n-brand/10 flex items-center justify-center">
-              <span class="i-lucide-shrimp size-6 text-n-brand" />
+              <span class="i-lucide-piggy-bank size-6 text-n-brand" />
             </div>
             <div>
               <h3 class="font-bold text-n-slate-12">Redução de Custos</h3>
@@ -277,7 +277,7 @@ export default {
     <!-- Right Column: Login Form -->
     <div class="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-16 relative bg-white">
       <!-- Mobile Logo -->
-      <div class="lg:hidden absolute top-8 w-full left-0 flex justify-center">
+      <div class="lg:hidden w-full flex justify-center py-8">
         <img :src="globalConfig.logo" :alt="globalConfig.installationName" class="h-8 w-auto" />
       </div>
 
@@ -327,7 +327,6 @@ export default {
                   v-model="credentials.email"
                   name="email_address"
                   type="text"
-                  icon="i-lucide-mail"
                   data-testid="email_input"
                   :tabindex="1"
                   required
@@ -378,13 +377,40 @@ export default {
             </form>
 
 
-            <div class="mt-8 text-center">
+            <div class="mt-8 text-center mb-12">
               <p class="text-sm text-n-slate-11">
                 Ainda não tem conta? 
                 <button class="text-n-brand font-bold hover:underline transition-all">
                   Solicite uma demonstração exclusiva →
                 </button>
               </p>
+            </div>
+
+            <!-- Mobile Only Feature Cards -->
+            <div class="lg:hidden space-y-4 w-full mt-4">
+              <div class="bg-n-slate-2 p-4 rounded-2xl border border-n-weak border-dashed">
+                <div class="flex items-center gap-3">
+                  <div class="size-10 rounded-xl bg-n-brand/10 flex items-center justify-center shrink-0">
+                    <span class="i-lucide-check-circle-2 size-5 text-n-brand" />
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-n-slate-12 text-xs">Conversão Imbatível</h3>
+                    <p class="text-[10px] text-n-slate-10 uppercase font-bold tracking-tight">IA treinada para fechar agendamentos.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-n-slate-2 p-4 rounded-2xl border border-n-weak border-dashed">
+                <div class="flex items-center gap-3">
+                  <div class="size-10 rounded-xl bg-n-brand/10 flex items-center justify-center shrink-0">
+                    <span class="i-lucide-piggy-bank size-5 text-n-brand" />
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-n-slate-12 text-xs">Redução de Custos</h3>
+                    <p class="text-[10px] text-n-slate-10 uppercase font-bold tracking-tight">Escala seu atendimento 24/7.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div v-else class="flex items-center justify-center p-12">

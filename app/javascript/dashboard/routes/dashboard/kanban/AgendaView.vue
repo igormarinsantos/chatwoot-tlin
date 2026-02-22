@@ -116,7 +116,11 @@ const getAppointmentsForDay = (day) => {
               class="px-2.5 py-1.5 bg-white dark:bg-n-solid-3 border border-n-weak dark:border-n-weak/50 shadow-sm rounded-xl text-[10px] font-bold text-n-slate-12 truncate cursor-pointer hover:border-n-brand hover:text-n-brand transition-all flex items-center gap-2"
               @click="$emit('select', app)"
             >
-              <div class="size-1.5 rounded-full bg-n-brand" />
+              <div 
+                class="size-1.5 rounded-full" 
+                :class="app.customAttributes?.is_agenda_event ? 'bg-n-slate-8' : 'bg-n-brand'"
+              />
+              <span v-if="app.customAttributes?.is_agenda_event" class="i-lucide-calendar-days size-3 opacity-60 flex-shrink-0" />
               {{ app.name || 'Sem nome' }}
             </div>
           </div>
