@@ -236,20 +236,6 @@ const menuItems = computed(() => {
       },
     },
     {
-      name: 'Pipeline',
-      label: t('SIDEBAR.PIPELINE'),
-      icon: 'i-lucide-filter',
-      to: accountScopedRoute('kanban_view'),
-      activeOn: ['kanban_view'],
-    },
-    {
-      name: 'Agenda',
-      label: t('SIDEBAR.AGENDA'),
-      icon: 'i-lucide-calendar',
-      to: accountScopedRoute('agenda_view'),
-      activeOn: ['agenda_view'],
-    },
-    {
       name: 'Conversation',
       label: t('SIDEBAR.CONVERSATIONS'),
       icon: 'i-lucide-message-circle',
@@ -330,6 +316,20 @@ const menuItems = computed(() => {
           })),
         },
       ],
+    },
+    {
+      name: 'Pipeline',
+      label: t('SIDEBAR.PIPELINE'),
+      icon: 'i-lucide-filter',
+      to: accountScopedRoute('kanban_view'),
+      activeOn: ['kanban_view'],
+    },
+    {
+      name: 'Agenda',
+      label: t('SIDEBAR.AGENDA'),
+      icon: 'i-lucide-calendar',
+      to: accountScopedRoute('agenda_view'),
+      activeOn: ['agenda_view'],
     },
     {
       name: 'Captain',

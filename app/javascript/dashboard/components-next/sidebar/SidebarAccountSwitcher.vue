@@ -80,10 +80,10 @@ const emitNewAccount = () => {
         @click="() => showAccountSwitcher && toggle()"
       >
         <span
-          class="text-sm font-medium leading-5 text-n-slate-12 truncate"
+          class="text-sm font-bold leading-5 text-n-slate-12 truncate"
           aria-live="polite"
         >
-          {{ currentAccount.name }}
+          {{ currentAccount.name === 'Tlin.ai' ? 'Tlin' : currentAccount.name }}
         </span>
 
         <span
@@ -111,10 +111,10 @@ const emitNewAccount = () => {
               class="text-left rtl:text-right flex gap-2 items-center"
             >
               <span
-                class="text-n-slate-12 max-w-36 truncate min-w-0"
-                :title="account.name"
+                class="text-n-slate-12 max-w-36 truncate min-w-0 font-bold"
+                :title="account.name === 'Tlin.ai' ? 'Tlin' : account.name"
               >
-                {{ account.name }}
+                {{ account.name === 'Tlin.ai' ? 'Tlin' : account.name }}
               </span>
               <div class="flex-shrink-0 w-px h-3 bg-n-strong" />
               <span

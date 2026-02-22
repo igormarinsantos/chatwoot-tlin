@@ -1,7 +1,7 @@
 import { frontendURL } from 'dashboard/helper/URLHelper';
 import InboxListView from './InboxList.vue';
+import InboxDashboard from './InboxDashboard.vue';
 import InboxDetailView from './InboxView.vue';
-import InboxEmptyStateView from './InboxEmptyState.vue';
 import {
   ROLES,
   CONVERSATION_PERMISSIONS,
@@ -15,7 +15,7 @@ export const routes = [
       {
         path: '',
         name: 'inbox_view',
-        component: InboxEmptyStateView,
+        component: InboxDashboard,
         meta: {
           permissions: [...ROLES, ...CONVERSATION_PERMISSIONS],
         },
