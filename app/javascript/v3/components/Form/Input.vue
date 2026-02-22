@@ -85,7 +85,7 @@ const currentInputType = computed(() => {
             !hasError,
           'px-3 py-3': spacing === 'base',
           'px-3 py-2 mb-0': spacing === 'compact',
-          'ltr:pl-10 ltr:pr-3 rtl:pr-10 rtl:pl-3': icon,
+          'ltr:pl-11 ltr:pr-3 rtl:pr-11 rtl:pl-3': icon,
           'px-3': !icon,
           'pr-10': isPasswordField,
         },

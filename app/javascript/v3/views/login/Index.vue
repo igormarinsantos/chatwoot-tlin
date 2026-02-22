@@ -226,9 +226,9 @@ export default {
       <div class="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-[#38E3FF]/10 rounded-full blur-[120px] animate-blob animation-delay-2000" />
       
       <div class="relative z-10">
-        <div class="flex items-center gap-2 mb-12 md:mb-16 justify-center lg:justify-start">
-        <Logo class="size-8" />
-      </div>
+        <div class="flex items-center mb-12 md:mb-16 justify-center lg:justify-start">
+          <img :src="globalConfig.logo" :alt="globalConfig.installationName" class="h-10 w-auto" />
+        </div>
 
         <div class="mb-8">
           <div class="inline-flex items-center justify-center p-2 rounded-xl bg-n-brand/10 mb-6 group">
@@ -277,9 +277,8 @@ export default {
     <!-- Right Column: Login Form -->
     <div class="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-16 relative bg-white">
       <!-- Mobile Logo -->
-      <div class="lg:hidden absolute top-8 left-8 flex items-center gap-2">
+      <div class="lg:hidden absolute top-8 w-full left-0 flex justify-center">
         <img :src="globalConfig.logo" :alt="globalConfig.installationName" class="h-8 w-auto" />
-        <span class="text-xl font-bold text-n-slate-12">Tlin.ai</span>
       </div>
 
       <div class="w-full max-w-md">
@@ -323,7 +322,7 @@ export default {
 
             <form class="space-y-6" @submit.prevent="submitFormLogin">
               <div class="space-y-1">
-                <label for="email" class="text-sm font-bold text-n-slate-12 block ml-1">E-mail Profissional</label>
+                <label for="email" class="text-sm font-bold text-n-slate-12 block ml-1 text-center lg:text-left">E-mail Profissional</label>
                 <FormInput
                   v-model="credentials.email"
                   name="email_address"
@@ -340,9 +339,9 @@ export default {
               </div>
 
               <div class="space-y-1">
-                <div class="flex justify-between items-end mb-1 px-1">
-                  <label for="password" class="text-sm font-bold text-n-slate-12">Senha</label>
-                  <router-link to="auth/reset/password" class="text-xs font-medium text-n-brand hover:underline">
+                <div class="flex flex-col lg:flex-row lg:justify-between lg:items-end mb-1 px-1">
+                  <label for="password" class="text-sm font-bold text-n-slate-12 text-center lg:text-left">Senha</label>
+                  <router-link to="auth/reset/password" class="text-xs font-medium text-n-brand hover:underline text-center lg:text-right mt-1 lg:mt-0">
                     Esqueci minha senha
                   </router-link>
                 </div>
@@ -361,7 +360,7 @@ export default {
                 />
               </div>
 
-              <div class="flex items-center gap-2 px-1">
+              <div class="flex items-center gap-2 px-1 justify-center lg:justify-start">
                 <input type="checkbox" id="remember" class="size-4 accent-n-brand rounded border-n-weak" />
                 <label for="remember" class="text-sm text-n-slate-10 select-none">Lembrar de mim</label>
               </div>
@@ -378,21 +377,6 @@ export default {
               />
             </form>
 
-            <div class="flex items-center mb-8 text-sm flex-wrap gap-2 justify-center lg:justify-between">
-          <label class="flex items-center gap-2 cursor-pointer group text-n-slate-11">
-            <input
-              type="checkbox"
-              class="size-4 rounded border-n-weak text-n-brand focus:ring-n-brand bg-n-alpha-black2 transition-all"
-            />
-            <span class="group-hover:text-n-slate-12 transition-colors">Lembrar de mim</span>
-          </label>
-          <RouterLink
-            :to="{ name: 'login_password_recovery' }"
-            class="text-n-brand hover:text-n-brand-strong font-medium transition-colors"
-          >
-            Esqueci minha senha
-          </RouterLink>
-        </div>
 
             <div class="mt-8 text-center">
               <p class="text-sm text-n-slate-11">

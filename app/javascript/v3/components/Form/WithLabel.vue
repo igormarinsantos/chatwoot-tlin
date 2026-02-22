@@ -26,7 +26,7 @@ defineProps({
       <div class="flex items-center relative w-full">
         <span
           v-if="icon"
-          class="absolute top-[13px] left-3 z-10 pointer-events-none text-n-slate-10 transition-colors group-focus-within:text-n-brand"
+          class="absolute top-[14.5px] left-3.5 z-10 pointer-events-none text-n-slate-10 transition-colors group-focus-within:text-n-brand"
           :class="icon"
         />
         <slot />
