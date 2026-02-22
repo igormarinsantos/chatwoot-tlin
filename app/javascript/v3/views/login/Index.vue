@@ -235,10 +235,11 @@ export default {
             <Icon icon="i-lucide-trending-up" class="size-6 text-n-brand group-hover:scale-110 transition-transform" />
           </div>
           <h1 class="text-5xl font-bold text-n-slate-12 leading-[1.1] tracking-tight mb-6">
-            Aumente seu <span class="text-gradient-tlin">ROI</span> em até 3x e <span class="text-gradient-tlin">reduza custos operacionais</span>.
+            Sua agenda não pode depender de <span class="text-gradient-tlin">sorte</span>.
           </h1>
           <p class="text-lg text-n-slate-10 max-w-lg leading-relaxed">
-            Transforme cada lead de WhatsApp em agendamento real com nossa IA de alta conversão. Atendimento imediato que não deixa dinheiro na mesa.
+            A TLIN é a IA que agenda, confirma e protege o faturamento da sua clínica — automaticamente.
+            <br/>Enquanto sua equipe cuida do paciente, a TLIN cuida da conversa e do comparecimento.
           </p>
         </div>
 
@@ -249,8 +250,8 @@ export default {
               <span class="i-lucide-check-circle-2 size-6 text-n-brand" />
             </div>
             <div>
-              <h3 class="font-bold text-n-slate-12">Conversão Imbatível</h3>
-              <p class="text-sm text-n-slate-10">IA treinada para fechar agendamentos e aumentar seu faturamento.</p>
+              <h3 class="font-bold text-n-slate-12">Mais consultas confirmadas</h3>
+              <p class="text-sm text-n-slate-10">Resposta em segundos, agendamento sem atrito e recuperação automática de pacientes indecisos.</p>
             </div>
           </div>
         </div>
@@ -261,8 +262,8 @@ export default {
               <span class="i-lucide-piggy-bank size-6 text-n-brand" />
             </div>
             <div>
-              <h3 class="font-bold text-n-slate-12">Redução de Custos</h3>
-              <p class="text-sm text-n-slate-10">Diminua sua carga operacional enquanto escala seu atendimento 24/7.</p>
+              <h3 class="font-bold text-n-slate-12">Menos no-show. Mais previsibilidade.</h3>
+              <p class="text-sm text-n-slate-10">Confirmações inteligentes e lembretes estratégicos que mantêm sua agenda ocupada e organizada.</p>
             </div>
           </div>
         </div>
@@ -284,11 +285,10 @@ export default {
       <div class="w-full max-w-md">
         <div class="mb-8 text-center lg:text-left">
           <h1 class="text-3xl font-bold text-n-slate-12 mb-2">
-            Bem-vindo ao Futuro
+            Acesse sua Central de Controle da Clínica
           </h1>
           <p class="text-n-slate-10 mb-8">
-            Acesse sua central de inteligência e gerencie sua clínica com
-            tecnologia de elite.
+            A infraestrutura invisível que mantém sua agenda organizada e seu faturamento protegido.
           </p>
         </div>
 
@@ -370,7 +370,7 @@ export default {
                 data-testid="submit_button"
                 class="w-full !rounded-2xl !py-4 shadow-lg shadow-n-brand/20 active:scale-95 transition-all text-base font-bold bubble-gradient"
                 :tabindex="3"
-                label="Acessar minha Central de IA"
+                label="Entrar na minha Central de Controle"
                 :disabled="loginApi.showLoading"
                 :is-loading="loginApi.showLoading"
               />
@@ -381,7 +381,7 @@ export default {
               <p class="text-sm text-n-slate-11">
                 Ainda não tem conta? 
                 <button class="text-n-brand font-bold hover:underline transition-all">
-                  Solicite uma demonstração exclusiva →
+                  Solicite uma demonstração estratégica →
                 </button>
               </p>
             </div>
@@ -394,8 +394,8 @@ export default {
                     <span class="i-lucide-check-circle-2 size-5 text-n-brand" />
                   </div>
                   <div>
-                    <h3 class="font-bold text-n-slate-12 text-xs">Conversão Imbatível</h3>
-                    <p class="text-[10px] text-n-slate-10 uppercase font-bold tracking-tight">IA treinada para fechar agendamentos.</p>
+                    <h3 class="font-bold text-n-slate-12 text-xs">Mais consultas confirmadas</h3>
+                    <p class="text-[10px] text-n-slate-10 uppercase font-bold tracking-tight">Resposta em segundos e recuperação automática.</p>
                   </div>
                 </div>
               </div>
@@ -406,8 +406,8 @@ export default {
                     <span class="i-lucide-piggy-bank size-5 text-n-brand" />
                   </div>
                   <div>
-                    <h3 class="font-bold text-n-slate-12 text-xs">Redução de Custos</h3>
-                    <p class="text-[10px] text-n-slate-10 uppercase font-bold tracking-tight">Escala seu atendimento 24/7.</p>
+                    <h3 class="font-bold text-n-slate-12 text-xs">Menos no-show.</h3>
+                    <p class="text-[10px] text-n-slate-10 uppercase font-bold tracking-tight">Confirmações e lembretes estratégicos.</p>
                   </div>
                 </div>
               </div>

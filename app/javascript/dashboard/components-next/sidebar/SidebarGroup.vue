@@ -260,10 +260,10 @@ watch(
     <!-- Expanded State -->
     <template v-else>
       <SidebarGroupHeader
-        :icon
-        :name
-        :label
-        :to
+        :icon="icon"
+        :name="name"
+        :label="label"
+        :to="to"
         :getter-keys="getterKeys"
         :is-active="isActive"
         :has-active-child="hasActiveChild"
@@ -314,20 +314,11 @@ watch(
 }
 
 /* This selects the last child in a group */
-/* https://codepen.io/scmmishra/pen/yLmKNLW */
-.sidebar-group-children > .child-item:last-child::before,
-.sidebar-group-children
-  > *:last-child
-  > *:last-child
-  > .child-item:last-child::before {
-  height: 20%;
+.sidebar-group-children .child-item:last-child::before {
+  height: 50%;
 }
 
-.sidebar-group-children > .child-item:last-child::after,
-.sidebar-group-children
-  > *:last-child
-  > *:last-child
-  > .child-item:last-child::after {
+.sidebar-group-children .child-item:last-child::after {
   content: '';
   position: absolute;
   width: 10px;
