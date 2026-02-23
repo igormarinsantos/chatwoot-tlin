@@ -1,0 +1,40 @@
+pt_BR:
+  activerecord:
+    models:
+      account:
+        one: 'Empresa'
+        other: 'Empresas'
+      user:
+        one: 'Usuário da Empresa'
+        other: 'Usuários das Empresas'
+      super_admin:
+        one: 'Super Admin'
+        other: 'Super Admins'
+      platform_app:
+        one: 'App da Plataforma'
+        other: 'Apps da Plataforma'
+      agent_bot:
+        one: 'Bot de Agente'
+        other: 'Bots de Agente'
+      installation_config:
+        one: 'Configuração de Instalação'
+        other: 'Configurações de Instalação'
+  administrate:
+    navigation:
+      accounts: 'Empresas'
+      users: 'Usuários das Empresas'
+      platform_apps: 'Apps da Plataforma'
+      agent_bots: 'Bots de Agente'
+      super_admins: 'Administradores'
+      installation_configs: 'Configurações'
+      instance_status: 'Status da Instância'
+    search:
+      label: 'Pesquisar %{resource}'
+      clear: 'Limpar busca'
+    resources:
+      accounts:
+        index:
+          title: 'Empresas'
+      users:
+        index:
+          title: 'Usuários das Empresas'

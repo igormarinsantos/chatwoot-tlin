@@ -24,6 +24,9 @@ body {
     --slate-11: 96 100 108;
     --slate-12: 28 32 36;
 
+    --n-brand: 181 151 255; // Tlin Purple
+    --n-brand-blue: 56 227 255; // Tlin Blue
+    
     --iris-1: 253 253 255;
     --iris-2: 248 248 255;
     --iris-3: 240 241 254;
@@ -210,5 +213,24 @@ body {
     --border-blue: 39, 129, 246, 0.5;
     --border-container: 236, 236, 236, 0;
     --white-alpha: 255, 255, 255, 0.1;
+  }
+
+  .navigation-item {
+    @apply flex items-center px-4 py-2.5 mx-2 my-0.5 rounded-xl transition-all duration-200 text-slate-600 font-medium hover:bg-slate-50 hover:text-n-brand;
+    
+    &.navigation-item--active {
+      @apply bg-n-brand/10 text-n-brand font-bold;
+    }
+
+    svg {
+      @apply mr-3 size-5;
+    }
+  }
+
+  .button {
+    @apply px-4 py-2 rounded-xl font-bold transition-all active:scale-95 text-sm inline-flex items-center justify-center;
+    &.button--primary {
+      @apply bg-n-brand text-white hover:opacity-90 shadow-lg shadow-n-brand/20;
+    }
   }
 }

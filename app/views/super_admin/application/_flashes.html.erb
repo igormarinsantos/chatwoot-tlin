@@ -12,9 +12,30 @@ This partial renders flash messages on every page.
 %>
 
 <% if flash.any? %>
-  <div class="flashes">
-    <% flash.each do |key, value| -%>
-      <div class="flash flash-<%= key %>"><%= value.to_s.html_safe %></div>
-    <% end -%>
+  <div class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-md w-full animate-in fade-in slide-in-from-right-4 duration-300">
+    <% flash.each do |key, value| %>
+      <% 
+        alert_classes = case key.to_s
+        when 'notice', 'success' then 'bg-emerald-50 text-emerald-800 border-emerald-200'
+        when 'alert', 'warning' then 'bg-amber-50 text-amber-800 border-amber-200'
+        when 'error', 'alert-danger' then 'bg-ruby-50 text-ruby-800 border-ruby-200'
+        else 'bg-slate-50 text-slate-800 border-slate-200'
+        end
+
+        icon_class = case key.to_s
+        when 'notice', 'success' then 'i-lucide-check-circle-2 text-emerald-500'
+        when 'alert', 'warning' then 'i-lucide-alert-triangle text-amber-500'
+        when 'error', 'alert-danger' then 'i-lucide-x-circle text-ruby-500'
+        else 'i-lucide-info text-slate-500'
+        end
+      %>
+      <div class="flex items-center p-4 rounded-xl border shadow-lg <%= alert_classes %>">
+        <span class="<%= icon_class %> size-5 mr-3 flex-shrink-0"></span>
+        <div class="text-sm font-bold flex-1"><%= value.to_s.html_safe %></div>
+        <button onclick="this.parentElement.remove()" class="ml-3 hover:opacity-70 transition-opacity">
+          <span class="i-lucide-x size-4"></span>
+        </button>
+      </div>
+    <% end %>
   </div>
 <% end %>
