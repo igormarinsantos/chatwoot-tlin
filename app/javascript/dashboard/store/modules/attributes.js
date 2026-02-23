@@ -52,7 +52,9 @@ export const actions = {
   create: async function createAttribute({ commit }, attributeObj) {
     commit(types.SET_CUSTOM_ATTRIBUTE_UI_FLAG, { isCreating: true });
     try {
-      const response = await AttributeAPI.create(attributeObj);
+      const response = await AttributeAPI.create({
+        custom_attribute_definition: attributeObj,
+      });
       commit(types.ADD_CUSTOM_ATTRIBUTE, response.data);
     } catch (error) {
       const errorMessage = error?.response?.data?.message;
@@ -64,7 +66,9 @@ export const actions = {
   update: async ({ commit }, { id, ...updateObj }) => {
     commit(types.SET_CUSTOM_ATTRIBUTE_UI_FLAG, { isUpdating: true });
     try {
-      const response = await AttributeAPI.update(id, updateObj);
+      const response = await AttributeAPI.update(id, {
+        custom_attribute_definition: updateObj,
+      });
       commit(types.EDIT_CUSTOM_ATTRIBUTE, response.data);
     } catch (error) {
       const errorMessage = error?.response?.data?.message;

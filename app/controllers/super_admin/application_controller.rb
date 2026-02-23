@@ -5,15 +5,9 @@
 # If you want to add pagination or other controller-level concerns,
 # you're free to overwrite the RESTful controller actions.
 class SuperAdmin::ApplicationController < Administrate::ApplicationController
-  include ActionView::Helpers::TagHelper
-  include ActionView::Context
   include SuperAdmin::NavigationHelper
 
-  helper_method :render_vue_component, :settings_open?, :settings_pages, :application_title
-
-  def application_title
-    'Tlin Super Admin'
-  end
+  helper_method :render_vue_component, :settings_open?, :settings_pages
   # authenticiation done via devise : SuperAdmin Model
   before_action :authenticate_super_admin!
 
@@ -40,7 +34,7 @@ class SuperAdmin::ApplicationController < Administrate::ApplicationController
         props: props.to_json
       }
     }
-    content_tag(:div, '', html_options)
+    helpers.content_tag(:div, '', html_options)
   end
 
   def invalid_action_perfomed
