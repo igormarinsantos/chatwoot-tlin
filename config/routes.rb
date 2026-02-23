@@ -441,6 +441,16 @@ Rails.application.routes.draw do
               get :channel
             end
           end
+          resources :appointments, only: [] do
+            collection do
+              post :confirm
+            end
+            member do
+              post :cancel
+              post :reschedule
+              post 'confirmations/receive', to: 'appointments#receive_confirmation'
+            end
+          end
           resources :reports, only: [:index] do
             collection do
               get :summary
