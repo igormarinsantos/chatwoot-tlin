@@ -8,18 +8,21 @@ import { ref } from 'vue';
 const store = useStore();
 const showAppointmentModal = ref(false);
 const selectedDate = ref(new Date());
+const selectedAppointment = ref(null);
 
 onMounted(async () => {
   await store.dispatch('contacts/get');
   await store.dispatch('agents/get');
   await store.dispatch('attributes/get');
   await store.dispatch('campaigns/get');
+  await store.dispatch('teams/get');
 
   // Ensure agenda attributes exist
   const contactAttributes = store.getters['attributes/getContactAttributes'];
   const requiredAttributes = [
     { key: 'appointment_at', displayName: 'Data do Compromisso', type: 'date' },
     { key: 'appointment_professional', displayName: 'Profissional', type: 'text' },
+    { key: 'appointment_team', displayName: 'Equipe', type: 'text' },
     { key: 'is_agenda_event', displayName: 'É Evento da Agenda?', type: 'checkbox' }
   ];
 
@@ -40,6 +43,17 @@ onMounted(async () => {
     }
   }
 });
+
+const openNewAppointment = (date) => {
+  selectedDate.value = date;
+  selectedAppointment.value = null;
+  showAppointmentModal.value = true;
+};
+
+const openEditAppointment = (app) => {
+  selectedAppointment.value = app;
+  showAppointmentModal.value = true;
+};
 </script>
 
 <template>
@@ -51,20 +65,15 @@ onMounted(async () => {
 
     <div class="flex-1 overflow-hidden bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak p-2 md:p-6 shadow-sm">
       <AgendaView 
-        @schedule="(date) => { selectedDate = date; showAppointmentModal = true; }"
-        @select="(app) => { 
-          if (app.conversation_id) {
-            $router.push({ name: 'messages', params: { conversationId: app.conversation_id } });
-          } else {
-            $router.push({ name: 'contact_profile', params: { contactId: app.id } });
-          }
-        }"
+        @schedule="openNewAppointment"
+        @select="openEditAppointment"
       />
     </div>
 
     <AppointmentModal
       v-if="showAppointmentModal"
       :initial-date="selectedDate"
+      :appointment="selectedAppointment"
       @close="showAppointmentModal = false"
     />
   </div>

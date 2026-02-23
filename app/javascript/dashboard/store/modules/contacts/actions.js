@@ -110,13 +110,27 @@ export const actions = {
     }
   },
 
-  update: async ({ commit }, { id, isFormData = false, ...contactParams }) => {
+  update: async ({ commit, getters }, { id, isFormData = false, ...contactParams }) => {
     const { avatar, customAttributes, ...paramsToDecamelize } = contactParams;
     const decamelizedContactParams = {
       ...snakecaseKeys(paramsToDecamelize, { deep: true }),
       ...(customAttributes && { custom_attributes: customAttributes }),
       ...(avatar && { avatar }),
     };
+
+    // Optimistic Update
+    const currentContact = getters.getContact(id);
+    if (!isFormData && currentContact.id) {
+      commit(types.EDIT_CONTACT, {
+        ...currentContact,
+        ...decamelizedContactParams,
+        custom_attributes: {
+          ...(currentContact.custom_attributes || {}),
+          ...(decamelizedContactParams.custom_attributes || {}),
+        },
+      });
+    }
+
     commit(types.SET_CONTACT_UI_FLAG, { isUpdating: true });
     try {
       const response = await ContactAPI.update(
@@ -128,6 +142,10 @@ export const actions = {
       commit(types.EDIT_CONTACT, response.data.payload);
       commit(types.SET_CONTACT_UI_FLAG, { isUpdating: false });
     } catch (error) {
+      // Revert on error
+      if (currentContact.id) {
+        commit(types.EDIT_CONTACT, currentContact);
+      }
       commit(types.SET_CONTACT_UI_FLAG, { isUpdating: false });
       handleContactOperationErrors(error);
     }

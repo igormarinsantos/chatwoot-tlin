@@ -52,7 +52,7 @@ export const initalizeRouter = () => {
   const ROUTE_TITLES = {
     inbox_view: 'Caixa de Entrada',
     inbox_view_conversation: 'Caixa de Entrada',
-    kanban_view: 'Funil de Vendas',
+    kanban_view: 'CRM',
     agenda_view: 'Agenda',
     home: 'Conversas',
     messages: 'Conversas',

@@ -17,8 +17,9 @@ const localStages = ref([...(props.attribute.attributeValues || [])]);
 const newStage = ref('');
 
 const addStage = () => {
-  if (newStage.value && !localStages.value.includes(newStage.value)) {
-    localStages.value.push(newStage.value);
+  const stageName = newStage.value.trim();
+  if (stageName && !localStages.value.includes(stageName)) {
+    localStages.value.push(stageName);
     newStage.value = '';
   }
 };
@@ -45,7 +46,7 @@ const saveStages = async () => {
     <div class="bg-white dark:bg-n-solid-1 rounded-3xl w-full max-w-md shadow-2xl border border-n-weak dark:border-n-weak/50 overflow-hidden flex flex-col max-h-[80vh]">
       <header class="p-6 border-b border-n-weak dark:border-n-weak/50 flex justify-between items-center bg-n-slate-1 dark:bg-n-solid-2">
         <div>
-          <h3 class="text-xl font-bold text-n-slate-12">Configurar Funil</h3>
+          <h3 class="text-xl font-bold text-n-slate-12">Configurar CRM</h3>
           <p class="text-xs text-n-slate-10 mt-1">Arraste para reordenar ou adicione novas etapas.</p>
         </div>
         <button @click="$emit('close')" class="p-2 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-2 rounded-full transition-colors">

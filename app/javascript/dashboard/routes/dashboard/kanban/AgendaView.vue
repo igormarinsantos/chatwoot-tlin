@@ -11,18 +11,24 @@ const showDailyPanel = ref(false);
 
 const contacts = computed(() => store.getters['contacts/getContactsList']);
 const agents = computed(() => store.getters['agents/getAgents']);
+const teams = computed(() => store.getters['teams/getTeams']);
 const campaigns = computed(() => store.getters['campaigns/getAllCampaigns']);
 const selectedProfessional = ref('all');
+const selectedTeam = ref('all');
 
 const appointments = computed(() => {
   const contactAppointments = contacts.value.filter(c => {
     const hasDate = c.customAttributes?.appointment_at;
     if (!hasDate) return false;
     
+    let matches = true;
     if (selectedProfessional.value !== 'all') {
-      return c.customAttributes?.appointment_professional === selectedProfessional.value;
+      matches = matches && c.customAttributes?.appointment_professional === selectedProfessional.value;
     }
-    return true;
+    if (selectedTeam.value !== 'all') {
+      matches = matches && c.customAttributes?.appointment_team === selectedTeam.value;
+    }
+    return matches;
   }).map(c => ({
     ...c,
     type: c.customAttributes?.is_agenda_event ? 'event' : 'appointment',
@@ -84,17 +90,32 @@ const selectDay = (day) => {
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
-        <span class="text-xs font-bold text-n-slate-9 uppercase tracking-wider">Filtrar Profissional:</span>
-        <select 
-          v-model="selectedProfessional"
-          class="bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl px-3 py-2 text-sm font-medium text-n-slate-12 outline-none focus:border-n-brand transition-colors"
-        >
-          <option value="all">Todos os Profissionais</option>
-          <option v-for="agent in agents" :key="agent.id" :value="agent.name">
-            {{ agent.name }}
-          </option>
-        </select>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] font-bold text-n-slate-9 uppercase tracking-wider">Equipe:</span>
+          <select 
+            v-model="selectedTeam"
+            class="bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl px-3 py-1.5 text-xs font-bold text-n-slate-12 outline-none focus:border-n-brand transition-colors"
+          >
+            <option value="all">Todas</option>
+            <option v-for="team in teams" :key="team.id" :value="team.name">
+              {{ team.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] font-bold text-n-slate-9 uppercase tracking-wider">Agente:</span>
+          <select 
+            v-model="selectedProfessional"
+            class="bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl px-3 py-1.5 text-xs font-bold text-n-slate-12 outline-none focus:border-n-brand transition-colors"
+          >
+            <option value="all">Todos</option>
+            <option v-for="agent in agents" :key="agent.id" :value="agent.name">
+              {{ agent.name }}
+            </option>
+          </select>
+        </div>
       </div>
     </header>
 
@@ -203,6 +224,9 @@ const selectDay = (day) => {
                   </span>
                   <span v-if="app.customAttributes?.appointment_professional" class="text-[10px] text-n-slate-9 font-medium truncate">
                     • {{ app.customAttributes.appointment_professional }}
+                  </span>
+                  <span v-if="app.custom_attributes?.pipeline_stage" class="text-[10px] text-n-brand font-bold uppercase tracking-tighter">
+                    • {{ app.custom_attributes.pipeline_stage }}
                   </span>
                   <span v-else-if="app.inbox" class="text-[10px] text-n-slate-9 font-medium truncate">
                     • {{ app.inbox.name }}

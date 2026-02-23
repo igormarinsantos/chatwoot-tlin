@@ -52,7 +52,7 @@ onMounted(() => {
   <div class="fixed inset-0 z-[110] flex items-center justify-center bg-n-slate-12/30 backdrop-blur-[2px]">
     <div class="bg-white dark:bg-n-solid-1 rounded-3xl w-full max-w-md shadow-2xl border border-n-weak dark:border-n-weak/50 overflow-hidden flex flex-col max-h-[60vh]">
       <header class="p-5 border-b border-n-weak dark:border-n-weak/50 flex justify-between items-center bg-n-slate-1 dark:bg-n-solid-2">
-        <h3 class="text-lg font-bold text-n-slate-12">Adicionar ao Funil</h3>
+        <h3 class="text-lg font-bold text-n-slate-12">Adicionar ao CRM</h3>
         <button @click="$emit('close')" class="p-2 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-2 rounded-full transition-colors">
           <span class="i-lucide-x size-5 text-n-slate-11" />
         </button>

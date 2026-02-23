@@ -26,7 +26,7 @@ const stages = computed(() => {
   if (pipelineAttribute.value && pipelineAttribute.value.attributeValues) {
     return pipelineAttribute.value.attributeValues;
   }
-  return ['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'];
+  return ['Lead', 'Qualificado', 'Proposta', 'Negociação', 'Ganhos', 'Perdas'];
 });
 
 const appointmentAtAttribute = computed(() => 
@@ -40,10 +40,24 @@ const appointmentProfessionalAttribute = computed(() =>
 // Local state for draggable to work correctly
 const localContactsByStage = ref({});
 
+const searchQuery = ref('');
+
+const filteredContacts = computed(() => {
+  if (!searchQuery.value) return contacts.value;
+  const query = searchQuery.value.toLowerCase();
+  return contacts.value.filter(c => 
+    c.name?.toLowerCase().includes(query) || 
+    c.email?.toLowerCase().includes(query) || 
+    c.phoneNumber?.includes(query)
+  );
+});
+
+const isUpdating = computed(() => store.getters['contacts/getUIFlags'].isUpdating);
+
 const syncLocalContacts = () => {
   const newMap = {};
   stages.value.forEach(stage => {
-    newMap[stage] = contacts.value.filter(contact => {
+    newMap[stage] = filteredContacts.value.filter(contact => {
       const contactStage = contact.custom_attributes?.pipeline_stage;
       if (!contactStage && stage === stages.value[0]) return true;
       return contactStage === stage;
@@ -52,7 +66,7 @@ const syncLocalContacts = () => {
   localContactsByStage.value = newMap;
 };
 
-watch([contacts, stages], syncLocalContacts, { immediate: true });
+watch([filteredContacts, stages], syncLocalContacts, { immediate: true });
 
 const onMove = (evt, stage) => {
   const { added } = evt;
@@ -61,7 +75,7 @@ const onMove = (evt, stage) => {
     store.dispatch('contacts/update', {
       id: element.id,
       custom_attributes: {
-        ...element.custom_attributes,
+        ...(element.custom_attributes || {}),
         pipeline_stage: stage,
       },
     });
@@ -89,7 +103,7 @@ const ensurePipelineAttribute = async () => {
         attribute_key: 'pipeline_stage',
         attribute_model: 'contact_attribute',
         attribute_display_type: 'list',
-        attribute_values: ['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'],
+        attribute_values: ['Lead', 'Qualificado', 'Proposta', 'Negociação', 'Ganhos', 'Perdas'],
       });
     } catch (error) {
       console.error('Failed to create pipeline attribute', error);
@@ -134,17 +148,31 @@ onMounted(async () => {
 
 <template>
   <div class="flex flex-col h-full w-full overflow-hidden bg-n-slate-2 dark:bg-n-solid-1 p-8 gap-8">
-    <header class="flex justify-between items-center">
+    <header class="flex justify-between items-start">
       <div>
-        <h1 class="text-3xl font-bold text-n-slate-12 tracking-tight">Funil de Vendas</h1>
-        <p class="text-sm text-n-slate-10 mt-1">Gerencie seus leads e oportunidades de forma ágil.</p>
+        <h1 class="text-3xl font-bold text-n-slate-12 tracking-tight">CRM</h1>
+        <p class="text-sm text-n-slate-10 mt-1">Gerencie seus leads e oportunidades no funil de vendas.</p>
       </div>
-      <button
-        class="px-5 py-2.5 bg-n-brand/10 text-n-brand border border-n-brand/20 rounded-xl text-sm font-bold hover:bg-n-brand/20 transition-all active:scale-95"
-        @click="showManager = true"
-      >
-        Configurar Etapas
-      </button>
+      <div class="flex items-center gap-3">
+        <div v-if="isUpdating" class="flex items-center gap-2 px-3 py-1.5 bg-n-brand/5 border border-n-brand/20 rounded-full animate-pulse">
+          <span class="size-2 bg-n-brand rounded-full" />
+          <span class="text-[10px] font-bold text-n-brand uppercase tracking-wider">Salvando...</span>
+        </div>
+        <div class="relative w-64">
+          <span class="absolute ltr:left-3 rtl:right-3 top-1/2 -translate-y-1/2 i-lucide-search size-4 text-n-slate-9" />
+          <input
+            v-model="searchQuery"
+            placeholder="Pesquisar leads..."
+            class="w-full ltr:pl-10 rtl:pr-10 px-4 py-2.5 bg-white dark:bg-n-solid-2 border border-n-weak dark:border-n-weak/50 rounded-xl focus:border-n-brand focus:ring-1 focus:ring-n-brand outline-none text-sm text-n-slate-12 placeholder:text-n-slate-9 transition-all shadow-sm"
+          />
+        </div>
+        <button
+          class="px-5 py-2.5 bg-n-brand/10 text-n-brand border border-n-brand/20 rounded-xl text-sm font-bold hover:bg-n-brand/20 transition-all active:scale-95 whitespace-nowrap"
+          @click="showManager = true"
+        >
+          Configurar Etapas
+        </button>
+      </div>
     </header>
 
     <div class="flex flex-1 gap-6 overflow-x-auto pb-6 custom-scrollbar">
