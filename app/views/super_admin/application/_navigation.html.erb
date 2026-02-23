@@ -22,7 +22,7 @@ as defined by the routes in the `admin/` namespace
 <div class="border-slate-100 border-r w-56 flex-shrink-0 justify-between h-full flex flex-col" role="navigation">
   <div>
     <div class="flex mx-4 mb-4 border-slate-100 border-b py-6">
-      <%= link_to image_tag('/brand-assets/logo_thumbnail.svg', alt: 'Tlin Admin Dashboard', class: 'h-10'), super_admin_root_url %>
+      <%= link_to image_tag('/brand-assets/logo_thumbnail.svg', alt: 'Tlin Admin Dashboard', class: 'h-10'), super_admin_root_path %>
       <div class="flex flex-col ml-3">
         <div class="text-sm font-bold">Tlin Admin</div>
         <div class="text-[10px] text-slate-500 font-medium uppercase tracking-wider"><%= Chatwoot.config[:version] %></div>
@@ -47,10 +47,10 @@ as defined by the routes in the `admin/` namespace
   </div>
   <div>
     <ul class="my-4">
-      <%= render partial: "nav_item", locals: { icon: 'icon-mist-fill', url: sidekiq_web_url, label: 'Painel Sidekiq' } %>
-      <%= render partial: "nav_item", locals: { icon: 'icon-health-book-line', url: super_admin_instance_status_url, label: 'Saúde do Sistema' } %>
+      <%= render partial: "nav_item", locals: { icon: 'icon-mist-fill', url: '/monitoring/sidekiq', label: 'Painel Sidekiq' } %>
+      <%= render partial: "nav_item", locals: { icon: 'icon-health-book-line', url: super_admin_instance_status_path, label: 'Saúde do Sistema' } %>
       <%= render partial: "nav_item", locals: { icon: 'icon-dashboard-line', url: '/', label: 'Abrir App Chat' } %>
-      <%= render partial: "nav_item", locals: { icon: 'icon-logout-circle-r-line', url: super_admin_logout_url, label: 'Sair' } %>
+      <%= render partial: "nav_item", locals: { icon: 'icon-logout-circle-r-line', url: '/super_admin/logout', label: 'Sair' } %>
     </ul>
   </div>
 </div>
