@@ -80,35 +80,35 @@ const goToContacts = () => router.push({ name: 'contacts_dashboard_index' });
 <template>
   <div class="flex-1 bg-n-slate-1 dark:bg-n-solid-1 overflow-y-auto p-4 md:p-8 custom-scroll">
     <!-- Header -->
-    <header class="mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
-      <h1 class="text-4xl font-bold text-n-slate-12 tracking-tight">
+    <header class="mb-6 md:mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
+      <h1 class="text-3xl md:text-4xl font-bold text-n-slate-12 tracking-tight">
         {{ greeting }}, <span class="bg-gradient-to-r from-n-brand to-n-iris-9 bg-clip-text text-transparent">{{ firstName }}</span>!
       </h1>
-      <p class="text-n-slate-10 mt-2 text-lg">Aqui está o que está acontecendo hoje na Tlin.</p>
+      <p class="text-n-slate-10 mt-2 text-base md:text-lg">Aqui está o que está acontecendo hoje na Tlin.</p>
     </header>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
       <!-- Left Column: Stats & Recent -->
-      <div class="lg:col-span-2 space-y-8">
+      <div class="lg:col-span-2 space-y-6 md:space-y-8 order-2 lg:order-1">
         <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-left-4 duration-700 delay-100">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-left-4 duration-700 delay-100">
           <div 
             v-for="stat in stats" 
             :key="stat.label"
-            class="p-6 bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak hover:border-n-brand/30 transition-all hover:shadow-xl hover:shadow-n-brand/5 group"
+            class="p-5 md:p-6 bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak hover:border-n-brand/30 transition-all hover:shadow-xl hover:shadow-n-brand/5 group"
           >
-            <div :class="['size-12 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110', stat.bg]">
-              <span :class="[stat.icon, stat.color, 'size-6']" />
+            <div :class="['size-10 md:size-12 rounded-2xl flex items-center justify-center mb-3 md:mb-4 transition-transform group-hover:scale-110', stat.bg]">
+              <span :class="[stat.icon, stat.color, 'size-5 md:size-6']" />
             </div>
-            <div class="text-3xl font-black text-n-slate-12 mb-1">{{ stat.value }}</div>
-            <div class="text-sm font-bold text-n-slate-10 uppercase tracking-wider">{{ stat.label }}</div>
+            <div class="text-2xl md:text-3xl font-black text-n-slate-12 mb-1">{{ stat.value }}</div>
+            <div class="text-[10px] md:text-xs font-bold text-n-slate-10 uppercase tracking-wider">{{ stat.label }}</div>
           </div>
         </div>
 
         <!-- Recent Conversations -->
         <section class="bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-          <header class="p-6 border-b border-n-weak flex items-center justify-between">
-            <h2 class="text-xl font-bold text-n-slate-12 flex items-center gap-2">
+          <header class="p-5 md:p-6 border-b border-n-weak flex items-center justify-between">
+            <h2 class="text-lg md:text-xl font-bold text-n-slate-12 flex items-center gap-2">
               <span class="i-lucide-message-square size-5 text-n-brand" />
               Conversas Recentes
             </h2>
@@ -132,7 +132,7 @@ const goToContacts = () => router.push({ name: 'contacts_dashboard_index' });
                 <p class="text-sm text-n-slate-10 truncate mt-0.5">{{ notification.message?.content || 'Nova mensagem recebida' }}</p>
               </div>
             </div>
-            <div v-if="recentNotifications.length === 0" class="p-12 text-center text-n-slate-9 italic">
+            <div v-if="recentNotifications.length === 0" class="p-10 md:p-12 text-center text-n-slate-9 italic">
               Nenhuma conversa recente encontrada.
             </div>
           </div>
@@ -140,43 +140,43 @@ const goToContacts = () => router.push({ name: 'contacts_dashboard_index' });
       </div>
 
       <!-- Right Column: Agenda & Actions -->
-      <div class="space-y-8 animate-in fade-in slide-in-from-right-4 duration-700 delay-300">
+      <div class="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-right-4 duration-700 delay-300 order-1 lg:order-2">
         <!-- Quick Actions -->
-        <section class="bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak p-6 shadow-sm">
-          <h2 class="text-xl font-bold text-n-slate-12 mb-6 flex items-center gap-2">
+        <section class="bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak p-5 md:p-6 shadow-sm">
+          <h2 class="text-lg md:text-xl font-bold text-n-slate-12 mb-4 md:mb-6 flex items-center gap-2">
             <span class="i-lucide-zap size-5 text-n-iris-9" />
             Ações Rápidas
           </h2>
-          <div class="grid grid-cols-1 gap-3">
+          <div class="grid grid-cols-2 lg:grid-cols-1 gap-3">
             <button 
               @click="goToContacts"
-              class="flex items-center gap-3 p-4 bg-n-slate-1 dark:bg-n-solid-3 rounded-2xl hover:bg-n-brand hover:text-white transition-all group"
+              class="flex items-center justify-center lg:justify-start gap-3 p-3 md:p-4 bg-n-slate-1 dark:bg-n-solid-3 rounded-2xl hover:bg-n-brand hover:text-white transition-all group"
             >
               <span class="i-lucide-user-plus size-5 text-n-brand group-hover:text-white" />
-              <span class="font-bold">Novo Lead</span>
+              <span class="font-bold text-sm md:text-base">Novo Lead</span>
             </button>
             <button 
               @click="goToAgenda"
-              class="flex items-center gap-3 p-4 bg-n-slate-1 dark:bg-n-solid-3 rounded-2xl hover:bg-n-brand hover:text-white transition-all group"
+              class="flex items-center justify-center lg:justify-start gap-3 p-3 md:p-4 bg-n-slate-1 dark:bg-n-solid-3 rounded-2xl hover:bg-n-brand hover:text-white transition-all group"
             >
               <span class="i-lucide-calendar-plus size-5 text-n-brand group-hover:text-white" />
-              <span class="font-bold">Agendar</span>
+              <span class="font-bold text-sm md:text-base">Agendar</span>
             </button>
           </div>
         </section>
 
         <!-- Today's Agenda -->
         <section class="bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak overflow-hidden shadow-sm flex-1">
-          <header class="p-6 border-b border-n-weak flex items-center justify-between bg-n-slate-1/50 dark:bg-n-solid-3/50">
-            <h2 class="text-xl font-bold text-n-slate-12 flex items-center gap-2">
+          <header class="p-5 md:p-6 border-b border-n-weak flex items-center justify-between bg-n-slate-1/50 dark:bg-n-solid-3/50">
+            <h2 class="text-lg md:text-xl font-bold text-n-slate-12 flex items-center gap-2">
               <span class="i-lucide-calendar-days size-5 text-n-brand" />
               Hoje
             </h2>
             <button @click="goToAgenda" class="text-xs font-bold text-n-brand hover:underline">Ver agenda</button>
           </header>
-          <div class="p-6 space-y-6">
-            <div v-if="todayEvents.length === 0" class="flex flex-col items-center justify-center py-8 text-n-slate-9 gap-3">
-              <span class="i-lucide-calendar-x size-10 opacity-20" />
+          <div class="p-5 md:p-6 space-y-6">
+            <div v-if="todayEvents.length === 0" class="flex flex-col items-center justify-center py-6 md:py-8 text-n-slate-9 gap-3">
+              <span class="i-lucide-calendar-x size-8 md:size-10 opacity-20" />
               <p class="text-sm font-medium">Nada planejado para hoje.</p>
             </div>
             <div v-else class="space-y-4">
@@ -187,8 +187,8 @@ const goToContacts = () => router.push({ name: 'contacts_dashboard_index' });
               >
                 <div class="w-12 text-sm font-bold text-n-brand pt-1">{{ event.time }}</div>
                 <div class="flex-1 min-w-0">
-                  <div class="font-bold text-n-slate-12 truncate group-hover:text-n-brand transition-colors">{{ event.name }}</div>
-                  <div class="text-[10px] uppercase font-black tracking-tighter text-n-slate-9 mt-0.5">{{ event.type }}</div>
+                  <div class="font-bold text-n-slate-12 truncate group-hover:text-n-brand transition-colors text-sm md:text-base">{{ event.name }}</div>
+                  <div class="text-[9px] md:text-[10px] uppercase font-black tracking-tighter text-n-slate-9 mt-0.5">{{ event.type }}</div>
                 </div>
               </div>
             </div>
