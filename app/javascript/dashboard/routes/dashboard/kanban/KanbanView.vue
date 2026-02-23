@@ -58,7 +58,7 @@ const syncLocalContacts = () => {
   const newMap = {};
   stages.value.forEach(stage => {
     newMap[stage] = filteredContacts.value.filter(contact => {
-      const contactStage = contact.custom_attributes?.pipeline_stage;
+      const contactStage = contact.customAttributes?.pipeline_stage;
       if (!contactStage && stage === stages.value[0]) return true;
       return contactStage === stage;
     });
@@ -74,8 +74,8 @@ const onMove = (evt, stage) => {
     const { element } = added;
     store.dispatch('contacts/update', {
       id: element.id,
-      custom_attributes: {
-        ...(element.custom_attributes || {}),
+      customAttributes: {
+        ...(element.customAttributes || {}),
         pipeline_stage: stage,
       },
     });

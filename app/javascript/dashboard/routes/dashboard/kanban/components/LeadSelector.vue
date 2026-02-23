@@ -31,8 +31,8 @@ const selectContact = async (contact) => {
   try {
     await store.dispatch('contacts/update', {
       id: contact.id,
-      custom_attributes: {
-        ...(contact.custom_attributes || {}),
+      customAttributes: {
+        ...(contact.customAttributes || {}),
         pipeline_stage: props.stage,
       },
     });

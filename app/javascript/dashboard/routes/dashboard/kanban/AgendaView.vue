@@ -74,9 +74,10 @@ const selectDay = (day) => {
   <div class="h-full flex flex-col gap-6">
     <header class="flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <h2 class="text-2xl font-bold text-n-slate-12 capitalize">
-          {{ format(currentMonth, 'MMMM yyyy', { locale: ptBR }) }}
-        </h2>
+        <div>
+          <h1 class="text-3xl font-black text-n-slate-12 tracking-tight">Agenda da Equipe</h1>
+          <p class="text-xs text-n-slate-10 font-medium">Organização e compromissos internos do time</p>
+        </div>
         <div class="flex gap-1">
           <button @click="prevMonth" class="p-2 hover:bg-n-alpha-1 rounded-xl transition-colors text-n-slate-10">
             <span class="i-lucide-chevron-left size-5" />
@@ -181,7 +182,7 @@ const selectDay = (day) => {
       <aside v-if="showDailyPanel" class="w-80 bg-white dark:bg-n-solid-2 rounded-2xl border border-n-weak flex flex-col shadow-sm animate-in slide-in-from-right duration-300">
         <header class="p-5 border-b border-n-weak flex items-center justify-between">
           <div>
-            <h3 class="font-bold text-n-slate-12">{{ format(selectedDay, "dd 'de' MMMM", { locale: ptBR }) }}</h3>
+            <h3 class="font-bold text-n-slate-12">Compromissos do Dia</h3>
             <p class="text-xs text-n-slate-9 uppercase tracking-wider font-bold mt-0.5">{{ format(selectedDay, 'EEEE', { locale: ptBR }) }}</p>
           </div>
           <button @click="showDailyPanel = false" class="p-2 hover:bg-n-alpha-1 rounded-xl transition-colors text-n-slate-10">
@@ -220,7 +221,7 @@ const selectDay = (day) => {
                     class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
                     :class="app.tagClass"
                   >
-                    {{ app.type === 'event' ? 'Evento' : app.type === 'campaign' ? 'Campanha' : 'Consulta' }}
+                    {{ app.type === 'event' ? 'Evento' : app.type === 'campaign' ? 'Campanha' : 'Compromisso' }}
                   </span>
                   <span v-if="app.customAttributes?.appointment_professional" class="text-[10px] text-n-slate-9 font-medium truncate">
                     • {{ app.customAttributes.appointment_professional }}

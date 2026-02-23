@@ -17,8 +17,8 @@ const contactName = computed(() => props.contact.name || 'Unknown');
 const email = computed(() => props.contact.email || '');
 const phone = computed(() => props.contact.phoneNumber || '');
 
-const appointmentAt = computed(() => props.contact.custom_attributes?.appointment_at || '');
-const professional = computed(() => props.contact.custom_attributes?.appointment_professional || '');
+const appointmentAt = computed(() => props.contact.customAttributes?.appointment_at || '');
+const professional = computed(() => props.contact.customAttributes?.appointment_professional || '');
 
 const formattedAppointmentDate = computed(() => {
   if (!appointmentAt.value) return '';
@@ -28,6 +28,11 @@ const formattedAppointmentDate = computed(() => {
   } catch (e) {
     return appointmentAt.value;
   }
+});
+
+const isWhatsApp = computed(() => {
+  const inboxes = props.contact.contactInboxes || [];
+  return inboxes.some(i => i.inbox?.channelType === 'Channel::Whatsapp');
 });
 
 const lastActivityAt = computed(() => {
@@ -43,15 +48,13 @@ const openContact = () => {
 };
 
 const openConversation = () => {
-  // If contact has conversations, we could jump to the first active one
-  // For now, let's just go to the contact profile which has the conversation list
   openContact();
 };
 </script>
 
 <template>
   <div 
-    class="bg-white dark:bg-n-solid-2 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all cursor-pointer border border-n-weak dark:border-n-weak/50 group relative overflow-hidden"
+    class="bg-white dark:bg-n-solid-2 rounded-2xl p-4 shadow-sm hover:shadow-xl transition-all cursor-pointer border border-n-weak dark:border-n-weak/50 group relative overflow-hidden"
     @click="openContact"
   >
     <div class="flex items-start gap-3">
@@ -67,7 +70,14 @@ const openConversation = () => {
         >
           {{ contactName.charAt(0).toUpperCase() }}
         </div>
-        <div class="absolute -bottom-1 -right-1 size-5 bg-white dark:bg-n-solid-2 rounded-full border border-n-weak flex items-center justify-center shadow-sm">
+        <div 
+          v-if="isWhatsApp"
+          class="absolute -bottom-1 -right-1 size-5 bg-[#25D366] rounded-full border-2 border-white dark:border-n-solid-2 flex items-center justify-center shadow-sm"
+          title="WhatsApp Lead"
+        >
+          <span class="i-lucide-phone size-3 text-white" />
+        </div>
+        <div v-else class="absolute -bottom-1 -right-1 size-5 bg-white dark:bg-n-solid-2 rounded-full border border-n-weak flex items-center justify-center shadow-sm">
           <span class="i-lucide-message-circle size-3 text-n-brand" />
         </div>
       </div>
@@ -79,20 +89,20 @@ const openConversation = () => {
           </h3>
         </div>
         
-        <p class="text-xs text-n-slate-10 truncate mb-3 flex items-center gap-1">
-          <span v-if="phone" class="i-lucide-phone size-3 opacity-50" />
-          <span v-else-if="email" class="i-lucide-mail size-3 opacity-50" />
+        <p class="text-[11px] text-n-slate-10 truncate mb-3 flex items-center gap-1">
+          <span v-if="phone" class="i-lucide-phone size-3 opacity-50 ltr:mr-0.5" />
+          <span v-else-if="email" class="i-lucide-mail size-3 opacity-50 ltr:mr-0.5" />
           {{ phone || email || t('CONTACT_PANEL.NO_TEXT') }}
         </p>
 
         <div v-if="appointmentAt || professional" class="mb-3 flex flex-wrap gap-2">
-          <div v-if="appointmentAt" class="flex items-center gap-1.5 px-2 py-1 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg">
+          <div v-if="appointmentAt" class="flex items-center gap-1 px-2 py-0.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg">
             <span class="i-lucide-calendar size-3 text-amber-600 dark:text-amber-400" />
             <span class="text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-tight">
               {{ formattedAppointmentDate }}
             </span>
           </div>
-          <div v-if="professional" class="flex items-center gap-1.5 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg">
+          <div v-if="professional" class="flex items-center gap-1 px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg">
             <span class="i-lucide-user size-3 text-blue-600 dark:text-blue-400" />
             <span class="text-[10px] font-bold text-blue-700 dark:text-blue-300 truncate max-w-[80px]">
               {{ professional }}
@@ -101,21 +111,21 @@ const openConversation = () => {
         </div>
 
         <div class="flex items-center justify-between mt-auto">
-          <div class="flex gap-1 overflow-hidden">
+          <div class="flex gap-1 flex-wrap max-w-[70%]">
             <template v-if="contact.labels && contact.labels.length">
               <span
-                v-for="label in contact.labels.slice(0, 2)"
+                v-for="label in contact.labels"
                 :key="label"
-                class="px-2 py-0.5 bg-n-brand/5 border border-n-brand/20 rounded text-[9px] text-n-brand font-medium truncate"
+                class="px-1.5 py-0.5 bg-n-brand/10 border border-n-brand/30 rounded-md text-[9px] text-n-brand font-bold uppercase tracking-wider"
               >
-                #{{ label }}
+                {{ label }}
               </span>
             </template>
             <span v-else class="text-[9px] text-n-slate-8 italic">Sem etiquetas</span>
           </div>
           
-          <span class="text-[9px] text-n-slate-9 font-medium opacity-50 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            Ativo em {{ lastActivityAt }}
+          <span class="text-[8px] text-n-slate-9 font-bold uppercase opacity-60 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-2">
+            {{ lastActivityAt }}
           </span>
         </div>
       </div>
