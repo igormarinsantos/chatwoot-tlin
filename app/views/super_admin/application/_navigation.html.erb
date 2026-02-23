@@ -37,7 +37,7 @@ as defined by the routes in the `admin/` namespace
         <%= render partial: "nav_item", locals: {
             icon: sidebar_icons[resource.resource.to_sym] || 'icon-grid-line',
             url: resource_index_route(resource),
-            label: I18n.t("administrate.navigation.#{resource.resource}", default: resource.name.titleize),
+            label: I18n.t("administrate.navigation.#{resource.resource}", default: resource.name.to_s.titleize),
           }
         %>
 

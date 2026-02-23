@@ -10,11 +10,6 @@ class SuperAdmin::ApplicationController < Administrate::ApplicationController
   helper_method :render_vue_component, :settings_open?, :settings_pages
   # authenticiation done via devise : SuperAdmin Model
   before_action :authenticate_super_admin!
-  
-  rescue_from StandardError do |exception|
-    # Force diagnostic mode temporarily to catch the 500 error in production
-    render plain: "Super Admin Error: #{exception.message}\n\n#{exception.backtrace.join("\n")}", status: 500
-  end
 
   # Override this value to specify the number of elements to display at a time
   # on index pages. Defaults to 20.
