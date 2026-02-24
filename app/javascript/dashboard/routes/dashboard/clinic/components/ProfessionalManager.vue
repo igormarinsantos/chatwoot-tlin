@@ -7,12 +7,20 @@ const professionals = computed(() => store.getters['clinicScheduler/getProfessio
 const procedures = computed(() => store.getters['clinicScheduler/getProcedures']);
 const isCreating = ref(false);
 const editingProfessional = ref(null);
-const newProfessional = ref({ name: '', procedure_ids: [] });
+const newProfessional = ref({ name: '', color: 'blue', procedure_ids: [] });
+
+const professionalColors = [
+  { id: 'blue', hex: '#3b82f6', classes: 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400' },
+  { id: 'purple', hex: '#a855f7', classes: 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400' },
+  { id: 'pink', hex: '#ec4899', classes: 'bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400' },
+  { id: 'orange', hex: '#f97316', classes: 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400' },
+  { id: 'green', hex: '#22c55e', classes: 'bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400' },
+];
 
 const addProfessional = async () => {
   if (!newProfessional.value.name.trim()) return;
   await store.dispatch('clinicScheduler/createProfessional', newProfessional.value);
-  newProfessional.value = { name: '', procedure_ids: [] };
+  newProfessional.value = { name: '', color: 'blue', procedure_ids: [] };
   isCreating.value = false;
 };
 
@@ -58,6 +66,21 @@ const toggleProcedure = (prof, procId) => {
           placeholder="Nome do profissional..."
           class="w-full px-4 py-2 bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl outline-none focus:border-n-brand focus:ring-1 focus:ring-n-brand text-sm"
         />
+
+        <div class="space-y-2">
+          <p class="text-xs font-bold text-n-slate-10">Cor de Identificação:</p>
+          <div class="flex gap-2">
+            <button
+              v-for="color in professionalColors"
+              :key="color.id"
+              @click="newProfessional.color = color.id"
+              class="size-8 rounded-full border-2 transition-all flex items-center justify-center"
+              :class="[color.classes, newProfessional.color === color.id ? 'border-n-brand scale-110 shadow-sm' : 'border-transparent']"
+            >
+              <span v-if="newProfessional.color === color.id" class="i-lucide-check size-4" />
+            </button>
+          </div>
+        </div>
         
         <div class="space-y-2">
           <p class="text-xs font-bold text-n-slate-10">Procedimentos que atende:</p>
@@ -93,7 +116,10 @@ const toggleProcedure = (prof, procId) => {
         >
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-4">
-              <div class="size-10 rounded-full bg-n-brand/10 text-n-brand font-bold flex items-center justify-center">
+              <div 
+                class="size-10 rounded-full font-bold flex items-center justify-center"
+                :class="professionalColors.find(c => c.id === (prof.color || 'blue'))?.classes || 'bg-n-brand/10 text-n-brand'"
+              >
                 {{ prof.name.charAt(0).toUpperCase() }}
               </div>
               <div>

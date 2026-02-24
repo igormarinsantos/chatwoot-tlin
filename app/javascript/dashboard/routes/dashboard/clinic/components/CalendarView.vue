@@ -5,7 +5,9 @@ import { DateTime, Info } from 'luxon';
 
 const store = useStore();
 const professionals = computed(() => store.getters['clinicScheduler/getProfessionals']);
-const selectedProfessionalId = ref(null);
+const procedures_global = computed(() => store.getters['clinicScheduler/getProcedures']);
+const appointments = computed(() => store.getters['clinicScheduler/getAppointments']);
+const selectedProfessionalId = ref('all');
 const currentWeek = ref(DateTime.now().startOf('week'));
 
 const isCreatingAppointment = ref(false);
@@ -22,8 +24,13 @@ const selectProfessional = (id) => {
 };
 
 const openAppointmentModal = (day, hour) => {
+  let prof_id = selectedProfessionalId.value;
+  if (prof_id === 'all') {
+    prof_id = professionals.value.length > 0 ? professionals.value[0].id : null;
+  }
+  
   newAppointment.value = {
-    professional_id: selectedProfessionalId.value,
+    professional_id: prof_id,
     procedure_id: null,
     start_datetime: day.set({ hour, minute: 0 }).toJSDate(),
     patient_name: '',
@@ -35,10 +42,13 @@ const openAppointmentModal = (day, hour) => {
 const saveAppointment = async () => {
   // Logic to create hold + confirm
   try {
+    // Only ISO string is valid for JSON persistence
+    const isoDate = DateTime.fromJSDate(newAppointment.value.start_datetime).toISO();
+    
     const hold = await store.dispatch('clinicScheduler/createHold', {
       professional_id: newAppointment.value.professional_id,
       procedure_id: newAppointment.value.procedure_id,
-      start_datetime: newAppointment.value.start_datetime,
+      start_datetime: isoDate,
     });
     
     await store.dispatch('clinicScheduler/confirmAppointment', {
@@ -50,7 +60,6 @@ const saveAppointment = async () => {
     });
     
     isCreatingAppointment.value = false;
-    store.dispatch('clinicScheduler/fetchAppointments');
   } catch (error) {
     alert('Erro ao criar agendamento: ' + error.message);
   }
@@ -65,13 +74,62 @@ const hours = Array.from({ length: 14 }, (_, i) => i + 8); // 8:00 to 21:00
 const procedures = computed(() => {
   if (!newAppointment.value.professional_id) return [];
   const prof = professionals.value.find(p => p.id === newAppointment.value.professional_id);
-  return prof ? prof.procedures : [];
+  return prof ? (prof.procedures || []) : [];
 });
 
+const professionalColors = [
+  { id: 'blue', classes: 'bg-blue-100 dark:bg-blue-900/40 border-l-4 border-blue-500 text-blue-800 dark:text-blue-300' },
+  { id: 'purple', classes: 'bg-purple-100 dark:bg-purple-900/40 border-l-4 border-purple-500 text-purple-800 dark:text-purple-300' },
+  { id: 'pink', classes: 'bg-pink-100 dark:bg-pink-900/40 border-l-4 border-pink-500 text-pink-800 dark:text-pink-300' },
+  { id: 'orange', classes: 'bg-orange-100 dark:bg-orange-900/40 border-l-4 border-orange-500 text-orange-800 dark:text-orange-300' },
+  { id: 'green', classes: 'bg-green-100 dark:bg-green-900/40 border-l-4 border-green-500 text-green-800 dark:text-green-300' },
+];
+
+const getAppointmentColorClasses = (appt) => {
+  const prof = professionals.value.find(p => p.id === appt.professional_id);
+  const colorId = prof?.color || 'blue';
+  return professionalColors.find(c => c.id === colorId)?.classes || professionalColors[0].classes;
+};
+
+const getProcedureDuration = (id) => {
+  const proc = procedures_global.value.find(p => p.id === id);
+  return proc ? proc.duration_minutes : 30;
+};
+
+const getProcedureName = (id) => {
+  const proc = procedures_global.value.find(p => p.id === id);
+  return proc ? proc.name : 'Procedimento';
+};
+
+const getAppointmentsForDay = (day) => {
+  return appointments.value.filter(a => {
+    if (selectedProfessionalId.value !== 'all' && a.professional_id !== selectedProfessionalId.value) return false;
+    // ensure date parses properly
+    const apptDate = DateTime.fromISO(a.start_datetime);
+    return apptDate.isValid && apptDate.hasSame(day, 'day');
+  });
+};
+
+const getAppointmentStyle = (appt) => {
+  const start = DateTime.fromISO(appt.start_datetime);
+  if (!start.isValid) return { display: 'none' };
+
+  const hourOffset = start.hour - 8;
+  const minuteOffset = start.minute / 60;
+  
+  const top = (hourOffset + minuteOffset) * 80;
+  
+  const duration = getProcedureDuration(appt.procedure_id);
+  const height = (duration / 60) * 80;
+  
+  return {
+    top: `${Math.max(0, top)}px`,
+    height: `${Math.max(20, height)}px` // minimum 20px height for visibility
+  };
+};
+
 onMounted(() => {
-  if (professionals.value.length > 0) {
-    selectedProfessionalId.value = professionals.value[0].id;
-  }
+  store.dispatch('clinicScheduler/fetchAppointments');
 });
 </script>
 
@@ -147,14 +205,28 @@ onMounted(() => {
 
       <div class="flex items-center gap-2 overflow-x-auto max-w-md no-scrollbar">
         <button
+          @click="selectProfessional('all')"
+          class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border"
+          :class="selectedProfessionalId === 'all' 
+            ? 'bg-n-brand text-white border-n-brand shadow-lg shadow-n-brand/20' 
+            : 'bg-white dark:bg-n-solid-3 text-n-slate-10 border-n-weak dark:border-n-weak/50 hover:border-n-brand/50'"
+        >
+          Todos
+        </button>
+        <button
           v-for="prof in professionals"
           :key="prof.id"
           @click="selectProfessional(prof.id)"
-          class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border"
+          class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border flex items-center gap-2"
           :class="selectedProfessionalId === prof.id 
             ? 'bg-n-brand text-white border-n-brand shadow-lg shadow-n-brand/20' 
             : 'bg-white dark:bg-n-solid-3 text-n-slate-10 border-n-weak dark:border-n-weak/50 hover:border-n-brand/50'"
         >
+          <span 
+            class="size-2 rounded-full" 
+            :class="`bg-${prof.color || 'blue'}-500`" 
+            :style="`background-color: ${prof.color === 'purple' ? '#a855f7' : prof.color === 'pink' ? '#ec4899' : prof.color === 'orange' ? '#f97316' : prof.color === 'green' ? '#22c55e' : '#3b82f6'}`"
+          />
           {{ prof.name }}
         </button>
       </div>
@@ -195,22 +267,27 @@ onMounted(() => {
               </div>
             </div>
 
-            <!-- Fake Data for UI Demonstration -->
+            <!-- Actual Dynamic Data -->
             <div 
-              v-if="day.weekday === 2"
-              class="absolute top-[160px] left-1 right-1 h-36 bg-n-brand/10 border-l-4 border-n-brand rounded-lg p-2 shadow-sm animate-in fade-in zoom-in duration-300"
+              v-for="appt in getAppointmentsForDay(day)"
+              :key="appt.id"
+              class="absolute left-1 right-1 rounded-lg p-2 shadow-sm animate-in fade-in zoom-in duration-300 overflow-hidden"
+              :class="getAppointmentColorClasses(appt)"
+              :style="getAppointmentStyle(appt)"
             >
-              <p class="text-[10px] font-bold text-n-brand uppercase leading-none mb-1">Confirmado</p>
-              <p class="font-bold text-n-slate-12 text-[11px] leading-tight">Maria Silva</p>
-              <p class="text-[9px] text-n-slate-10 font-medium">Limpeza Dental</p>
-            </div>
+              <div v-if="appt.status === 'confirmed'" class="h-full flex flex-col justify-between">
+                <div>
+                  <p class="text-[9px] font-bold uppercase leading-none mb-0.5 opacity-80">Confirmado</p>
+                  <p class="font-bold text-[11px] leading-tight truncate">{{ appt.patient_name }}</p>
+                </div>
+                <!-- Only show proc if height allows -->
+                <p v-if="getProcedureDuration(appt.procedure_id) >= 30" class="text-[9px] font-medium opacity-80 truncate">{{ getProcedureName(appt.procedure_id) }}</p>
+              </div>
 
-            <div 
-              v-if="day.weekday === 4"
-              class="absolute top-[400px] left-1 right-1 h-20 bg-amber-500/10 border-l-4 border-amber-500 rounded-lg p-2 shadow-sm"
-            >
-              <p class="text-[10px] font-bold text-amber-600 uppercase leading-none mb-1">Hold</p>
-              <p class="font-bold text-n-slate-12 text-[11px] leading-tight">João Santos</p>
+              <div v-else class="h-full opacity-60">
+                <p class="text-[9px] font-bold uppercase leading-none mb-0.5 opacity-80">Hold</p>
+                <p class="font-bold text-[11px] leading-tight truncate">Bloqueado</p>
+              </div>
             </div>
           </div>
         </div>

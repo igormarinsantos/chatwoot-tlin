@@ -7,6 +7,7 @@ const settings = computed(() => store.getters['clinicScheduler/getClinicSettings
 
 const localSettings = ref({
   name: '',
+  webhook_url: '',
   operating_hours: {
     monday: { open: '08:00', close: '18:00' },
     tuesday: { open: '08:00', close: '18:00' },
@@ -42,6 +43,31 @@ const days = [
   { id: 'saturday', name: 'Sábado' },
   { id: 'sunday', name: 'Domingo' }
 ];
+
+const testWebhook = async () => {
+  if (!localSettings.value.webhook_url) {
+    alert('Por favor, defina a URL do Webhook primeiro.');
+    return;
+  }
+  try {
+    const response = await fetch(localSettings.value.webhook_url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event: 'test_webhook',
+        timestamp: new Date().toISOString(),
+        data: { message: 'Hello from Tlin.ai Clinic Agenda!' }
+      })
+    });
+    if (response.ok) {
+      alert('Webhook testado com sucesso!');
+    } else {
+      alert('O payload foi enviado, mas o webhook retornou um erro.');
+    }
+  } catch (error) {
+    alert('Erro de rede ao testar o webhook. Verifique CORS ou a URL.');
+  }
+};
 </script>
 
 <template>
@@ -120,10 +146,11 @@ const days = [
             <label class="text-[10px] font-bold text-n-brand uppercase">Webhook de Destino (n8n, etc)</label>
             <div class="flex gap-2">
               <input
+                v-model="localSettings.webhook_url"
                 placeholder="https://sua-url-de-webhook.com/..."
                 class="flex-1 px-4 py-2 bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl outline-none focus:border-n-brand text-sm"
               />
-              <button class="px-4 py-2 bg-n-brand text-white text-xs font-bold rounded-xl">Testar</button>
+              <button @click="testWebhook" class="px-4 py-2 bg-n-brand text-white text-xs font-bold rounded-xl whitespace-nowrap">Testar</button>
             </div>
           </div>
         </div>

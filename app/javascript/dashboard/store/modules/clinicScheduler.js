@@ -99,6 +99,32 @@ const actions = {
       console.error('Error deleting procedure:', error);
     }
   },
+  fetchAppointments: async ({ commit, state }) => {
+    try {
+      const response = await ClinicSchedulerAPI.getAppointments(state.activeClinicId);
+      commit('SET_APPOINTMENTS', response.data);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    }
+  },
+  createHold: async ({ state }, data) => {
+    try {
+      const response = await ClinicSchedulerAPI.createHold(state.activeClinicId, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating hold:', error);
+      throw error;
+    }
+  },
+  confirmAppointment: async ({ dispatch, state }, { holdId, data }) => {
+    try {
+      await ClinicSchedulerAPI.confirmAppointment(state.activeClinicId, holdId, data);
+      dispatch('fetchAppointments');
+    } catch (error) {
+      console.error('Error confirming appointment:', error);
+      throw error;
+    }
+  },
 };
 
 const mutations = {
