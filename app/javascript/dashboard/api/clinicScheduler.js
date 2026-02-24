@@ -75,6 +75,14 @@ export default {
   createProfessional(clinicId, payload) {
     const data = getLocalData();
     const newProf = { ...payload, id: generateId(), clinic_id: clinicId };
+    
+    // Map procedure_ids to actual procedure objects if present
+    if (newProf.procedure_ids && Array.isArray(newProf.procedure_ids)) {
+      newProf.procedures = data.procedures.filter(p => newProf.procedure_ids.includes(p.id));
+    } else {
+      newProf.procedures = [];
+    }
+
     data.professionals.push(newProf);
     saveLocalData(data);
     fireWebhook(clinicId, 'professional_created', newProf);
@@ -84,7 +92,14 @@ export default {
     const data = getLocalData();
     const profIndex = data.professionals.findIndex(p => p.id === payload.id);
     if (profIndex !== -1) {
-      data.professionals[profIndex] = { ...data.professionals[profIndex], ...payload, clinic_id: clinicId };
+      const updatedProf = { ...data.professionals[profIndex], ...payload, clinic_id: clinicId };
+      
+      // Update mapped procedures if procedure_ids are provided
+      if (updatedProf.procedure_ids && Array.isArray(updatedProf.procedure_ids)) {
+        updatedProf.procedures = data.procedures.filter(p => updatedProf.procedure_ids.includes(p.id));
+      }
+
+      data.professionals[profIndex] = updatedProf;
       saveLocalData(data);
       fireWebhook(clinicId, 'professional_updated', data.professionals[profIndex]);
       return Promise.resolve({ data: data.professionals[profIndex] });
@@ -193,6 +208,24 @@ export default {
       fireWebhook(
         clinicId,
         'appointment_canceled',
+        data.appointments[apptIndex]
+      );
+      return Promise.resolve({ data: data.appointments[apptIndex] });
+    }
+    return Promise.reject(new Error('Appointment not found'));
+  },
+  updateAppointment(clinicId, appointmentId, payload) {
+    const data = getLocalData();
+    const apptIndex = data.appointments.findIndex(a => a.id === appointmentId);
+    if (apptIndex !== -1) {
+      data.appointments[apptIndex] = {
+        ...data.appointments[apptIndex],
+        ...payload,
+      };
+      saveLocalData(data);
+      fireWebhook(
+        clinicId,
+        'appointment_updated',
         data.appointments[apptIndex]
       );
       return Promise.resolve({ data: data.appointments[apptIndex] });

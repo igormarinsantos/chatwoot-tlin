@@ -17,7 +17,6 @@ onMounted(() => {
 
 const tabs = [
   { id: 'agenda', name: 'Agenda', icon: 'i-lucide-calendar' },
-  { id: 'management', name: 'Gestão de Clínica', icon: 'i-lucide-users' },
   { id: 'settings', name: 'Configurações', icon: 'i-lucide-settings' },
 ];
 </script>
@@ -53,11 +52,11 @@ const tabs = [
         <CalendarView />
       </div>
 
-      <div v-else-if="activeTab === 'settings'" class="h-full overflow-y-auto p-8 max-w-4xl mx-auto">
-        <ClinicSettings />
-      </div>
-
       <div v-else class="h-full overflow-y-auto p-8 space-y-12">
+        <div class="max-w-4xl mx-auto">
+          <ClinicSettings />
+        </div>
+        
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <ProfessionalManager />
           <ProcedureManager />

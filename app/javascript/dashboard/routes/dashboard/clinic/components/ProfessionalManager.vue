@@ -7,7 +7,18 @@ const professionals = computed(() => store.getters['clinicScheduler/getProfessio
 const procedures = computed(() => store.getters['clinicScheduler/getProcedures']);
 const isCreating = ref(false);
 const editingProfessional = ref(null);
-const newProfessional = ref({ id: null, name: '', color: 'blue', procedure_ids: [] });
+const newProfessional = ref({ 
+  id: null, 
+  name: '', 
+  color: 'blue', 
+  procedure_ids: [],
+  working_hours: {
+    start: '08:00',
+    end: '18:00',
+    break_start: '12:00',
+    break_end: '13:00'
+  }
+});
 
 const professionalColors = [
   { id: 'blue', hex: '#3b82f6', bgHex: '#dbeafe', textHex: '#1e40af' },
@@ -24,7 +35,13 @@ const addProfessional = async () => {
   } else {
     await store.dispatch('clinicScheduler/createProfessional', newProfessional.value);
   }
-  newProfessional.value = { id: null, name: '', color: 'blue', procedure_ids: [] };
+  newProfessional.value = { 
+    id: null, 
+    name: '', 
+    color: 'blue', 
+    procedure_ids: [],
+    working_hours: { start: '08:00', end: '18:00', break_start: '12:00', break_end: '13:00' }
+  };
   isCreating.value = false;
 };
 
@@ -33,7 +50,8 @@ const editProfessional = (prof) => {
     id: prof.id, 
     name: prof.name, 
     color: prof.color || 'blue', 
-    procedure_ids: prof.procedures?.map(p => p.id) || [] 
+    procedure_ids: prof.procedures?.map(p => p.id) || [],
+    working_hours: prof.working_hours || { start: '08:00', end: '18:00', break_start: '12:00', break_end: '13:00' }
   };
   isCreating.value = true;
 };
@@ -65,7 +83,7 @@ const toggleProcedure = (prof, procId) => {
         <p class="text-xs text-n-slate-10 uppercase font-bold tracking-widest mt-1">Especialistas da Clínica</p>
       </div>
       <button
-        @click="() => { newProfessional = { id: null, name: '', color: 'blue', procedure_ids: [] }; isCreating = true; }"
+        @click="() => { newProfessional = { id: null, name: '', color: 'blue', procedure_ids: [], working_hours: { start: '08:00', end: '18:00', break_start: '12:00', break_end: '13:00' } }; isCreating = true; }"
         class="size-10 bg-n-brand/10 text-n-brand rounded-xl flex items-center justify-center hover:bg-n-brand/20 transition-all"
       >
         <span class="i-lucide-plus size-5" />
@@ -113,6 +131,26 @@ const toggleProcedure = (prof, procId) => {
             >
               {{ proc.name }}
             </button>
+          </div>
+        </div>
+
+        <div class="space-y-2 pt-2 border-t border-n-brand/10">
+          <p class="text-xs font-bold text-n-slate-10">Horários de Trabalho (Diário):</p>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-n-slate-9">Expediente (Início - Fim)</label>
+              <div class="flex gap-2">
+                <input v-model="newProfessional.working_hours.start" type="time" class="w-full px-2 py-1.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg text-xs outline-none" />
+                <input v-model="newProfessional.working_hours.end" type="time" class="w-full px-2 py-1.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg text-xs outline-none" />
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-n-slate-9">Pausa / Almoço (Início - Fim)</label>
+              <div class="flex gap-2">
+                <input v-model="newProfessional.working_hours.break_start" type="time" class="w-full px-2 py-1.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg text-xs outline-none" />
+                <input v-model="newProfessional.working_hours.break_end" type="time" class="w-full px-2 py-1.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg text-xs outline-none" />
+              </div>
+            </div>
           </div>
         </div>
 

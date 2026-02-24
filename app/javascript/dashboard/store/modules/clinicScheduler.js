@@ -125,6 +125,24 @@ const actions = {
       throw error;
     }
   },
+  updateAppointment: async ({ dispatch, state }, { appointmentId, data }) => {
+    try {
+      await ClinicSchedulerAPI.updateAppointment(state.activeClinicId, appointmentId, data);
+      dispatch('fetchAppointments');
+    } catch (error) {
+      console.error('Error updating appointment:', error);
+      throw error;
+    }
+  },
+  cancelAppointment: async ({ dispatch, state }, appointmentId) => {
+    try {
+      await ClinicSchedulerAPI.cancelAppointment(state.activeClinicId, appointmentId);
+      dispatch('fetchAppointments');
+    } catch (error) {
+      console.error('Error canceling appointment:', error);
+      throw error;
+    }
+  }
 };
 
 const mutations = {
