@@ -5,12 +5,17 @@ import { useStore } from 'vuex';
 const store = useStore();
 const procedures = computed(() => store.getters['clinicScheduler/getProcedures']);
 const isCreating = ref(false);
-const newProcedure = ref({ name: '', duration_minutes: 30 });
+const newProcedure = ref({ name: '', duration_minutes: 30, price: null });
+
+const formatCurrency = (value) => {
+  if (value === null || value === undefined) return 'Consulte';
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+};
 
 const addProcedure = async () => {
   if (!newProcedure.value.name.trim()) return;
   await store.dispatch('clinicScheduler/createProcedure', { ...newProcedure.value });
-  newProcedure.value = { name: '', duration_minutes: 30 };
+  newProcedure.value = { name: '', duration_minutes: 30, price: null };
   isCreating.value = false;
 };
 </script>
@@ -38,13 +43,25 @@ const addProcedure = async () => {
             placeholder="Nome do procedimento..."
             class="w-full px-4 py-2 bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl outline-none focus:border-n-brand focus:ring-1 focus:ring-n-brand text-sm"
           />
-          <div class="flex items-center gap-3">
-            <span class="text-xs font-bold text-n-slate-10">Duração (min):</span>
-            <input
-              v-model.number="newProcedure.duration_minutes"
-              type="number"
-              class="w-24 px-3 py-1.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg outline-none focus:border-n-brand text-xs font-bold"
-            />
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
+              <span class="text-xs font-bold text-n-slate-10">Duração (min):</span>
+              <input
+                v-model.number="newProcedure.duration_minutes"
+                type="number"
+                class="w-24 px-3 py-1.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg outline-none focus:border-n-brand text-xs font-bold"
+              />
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs font-bold text-n-slate-10">Valor (R$):</span>
+              <input
+                v-model.number="newProcedure.price"
+                type="number"
+                placeholder="Ex: 150.00"
+                step="0.01"
+                class="w-32 px-3 py-1.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg outline-none focus:border-n-brand text-xs font-bold"
+              />
+            </div>
           </div>
         </div>
         <div class="flex gap-2">
@@ -65,9 +82,15 @@ const addProcedure = async () => {
             </div>
             <div>
               <p class="font-bold text-n-slate-12 text-sm">{{ proc.name }}</p>
-              <div class="flex items-center gap-1.5 mt-0.5">
-                <span class="i-lucide-clock size-3 text-n-slate-8" />
-                <span class="text-[10px] text-n-slate-9 font-bold">{{ proc.duration_minutes }} min</span>
+              <div class="flex items-center gap-3 mt-0.5">
+                <div class="flex items-center gap-1.5">
+                  <span class="i-lucide-clock size-3 text-n-slate-8" />
+                  <span class="text-[10px] text-n-slate-9 font-bold">{{ proc.duration_minutes }} min</span>
+                </div>
+                <div class="flex items-center gap-1.5" v-if="proc.price !== null && proc.price !== undefined && proc.price !== ''">
+                  <span class="i-lucide-banknote size-3 text-n-slate-8" />
+                  <span class="text-[10px] text-green-600 dark:text-green-500 font-bold">{{ formatCurrency(proc.price) }}</span>
+                </div>
               </div>
             </div>
           </div>

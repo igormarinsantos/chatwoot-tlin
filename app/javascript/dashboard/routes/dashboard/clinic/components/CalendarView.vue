@@ -101,6 +101,11 @@ const getProcedureName = (id) => {
   return proc ? proc.name : 'Procedimento';
 };
 
+const formatCurrency = (value) => {
+  if (value === null || value === undefined || value === '') return '';
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+};
+
 const getAppointmentsForDay = (day) => {
   return appointments.value.filter(a => {
     if (selectedProfessionalId.value !== 'all' && a.professional_id !== selectedProfessionalId.value) return false;
@@ -157,7 +162,9 @@ onMounted(() => {
               <label class="text-xs font-bold text-n-slate-10 uppercase">Procedimento</label>
               <select v-model="newAppointment.procedure_id" class="w-full p-3 bg-n-slate-1 dark:bg-n-solid-3 border border-n-weak rounded-xl text-sm outline-none">
                 <option value="" disabled selected>Selecione...</option>
-                <option v-for="proc in procedures" :key="proc.id" :value="proc.id">{{ proc.name }} ({{ proc.duration_minutes }} min)</option>
+                <option v-for="proc in procedures" :key="proc.id" :value="proc.id">
+                  {{ proc.name }} ({{ proc.duration_minutes }} min) {{ formatCurrency(proc.price) ? ' - ' + formatCurrency(proc.price) : '' }}
+                </option>
               </select>
             </div>
           </div>
