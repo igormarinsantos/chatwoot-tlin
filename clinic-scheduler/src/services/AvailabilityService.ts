@@ -1,101 +1,69 @@
 import { DateTime, Interval } from "luxon";
-import db from "../db/knex";
-
-interface Slot {
-  start: string;
-  end: string;
-}
+import db from "../db/connection";
 
 export class AvailabilityService {
-  static async getSlots(
-    clinicId: string,
-    professionalId: string,
-    procedureId: string,
-    from: string,
-    to: string
-  ): Promise<{ slots: Slot[], next_available_date: string | null }> {
-    const fromDate = DateTime.fromISO(from);
-    const toDate = DateTime.fromISO(to);
-
-    // 1. Get Clinic Timezone
-    const clinic = await db("clinics").where({ id: clinicId }).first();
-    const timezone = clinic?.timezone || "America/Sao_Paulo";
-
-    // 2. Get Procedure Duration
-    const procedure = await db("procedures").where({ id: procedureId }).first();
+  static async getAvailableSlots(clinicId: string, professionalId: string, procedureId: string, dateStr: string) {
+    const procedure = await db("procedures").where({ id: procedureId, clinic_id: clinicId }).first();
     if (!procedure) throw new Error("Procedure not found");
-    const durationMin = procedure.duration_min;
 
-    // 3. Get Availability Rules
-    const rules = await db("availability_rules").where({ professional_id: professionalId, clinic_id: clinicId });
+    const professional = await db("professionals").where({ id: professionalId, clinic_id: clinicId }).first();
+    if (!professional) throw new Error("Professional not found");
 
-    // 4. Get Blocks and Appointments
+    const date = DateTime.fromISO(dateStr);
+    const dayOfWeek = date.weekday % 7; // Luxon 1-7 (Mon-Sun), DB 0-6 (Sun-Sat)? Let's assume 0=Sun, 1=Mon...
+
+    // 1. Get Weekly Rules
+    const rules = await db("availability_rules").where({
+      professional_id: professionalId,
+      day_of_week: dayOfWeek
+    });
+
+    if (rules.length === 0) return [];
+
+    // 2. Get Blocks & Appointments for the day
+    const dayStart = date.startOf("day").toJSDate();
+    const dayEnd = date.endOf("day").toJSDate();
+
     const blocks = await db("blocks")
-      .where({ professional_id: professionalId, clinic_id: clinicId })
-      .orWhere({ professional_id: null, clinic_id: clinicId })
-      .where("start_datetime", "<", toDate.toISO())
-      .where("end_datetime", ">", fromDate.toISO());
+      .where("professional_id", professionalId)
+      .andWhere("start_at", "<", dayEnd)
+      .andWhere("end_at", ">", dayStart);
 
     const appointments = await db("appointments")
-      .where({ professional_id: professionalId, clinic_id: clinicId })
-      .whereIn("status", ["CONFIRMED", "HOLD"])
-      .where("start_datetime", "<", toDate.toISO())
-      .where("end_datetime", ">", fromDate.toISO());
+      .where("professional_id", professionalId)
+      .whereIn("status", ["HOLD", "CONFIRMED"])
+      .andWhere("start_at", "<", dayEnd)
+      .andWhere("end_at", ">", dayStart);
 
-    const slots: Slot[] = [];
-    let currentDay = fromDate.startOf("day");
+    const busyIntervals = [
+      ...blocks.map(b => Interval.fromDateTimes(DateTime.fromJSDate(b.start_at), DateTime.fromJSDate(b.end_at))),
+      ...appointments.map(a => Interval.fromDateTimes(DateTime.fromJSDate(a.start_at), DateTime.fromJSDate(a.end_at)))
+    ];
 
-    // Loop through days from 'from' to 'to'
-    while (currentDay <= toDate) {
-      const dayOfWeek = currentDay.weekday % 7; // Luxon weekday is 1-7 (Mon-Sun), DB is 0-6
-      const dayRules = rules.filter(r => r.weekday === (dayOfWeek === 0 ? 0 : dayOfWeek)); // Adjusting for 0 = Sunday if needed, but let's assume 0-6 matches standard
+    const slots: string[] = [];
+    const duration = procedure.duration_minutes;
 
-      for (const rule of dayRules) {
-        const [startH, startM] = rule.start_time.split(":").map(Number);
-        const [endH, endM] = rule.end_time.split(":").map(Number);
+    for (const rule of rules) {
+      const [startHour, startMin] = rule.start_time.split(":").map(Number);
+      const [endHour, endMin] = rule.end_time.split(":").map(Number);
 
-        let currentSlotStart = currentDay.set({ hour: startH, minute: startM }).setZone(timezone);
-        const dayEnd = currentDay.set({ hour: endH, minute: endM }).setZone(timezone);
+      let currentSlot = date.set({ hour: startHour, minute: startMin, second: 0, millisecond: 0 });
+      const ruleEnd = date.set({ hour: endHour, minute: endMin, second: 0, millisecond: 0 });
 
-        const slotGranularity = rule.slot_granularity_min || 15;
-        const bufferBefore = rule.buffer_before_min || 0;
-        const bufferAfter = rule.buffer_after_min || 0;
-
-        while (currentSlotStart.plus({ minutes: durationMin + bufferAfter }) <= dayEnd) {
-          const slotEnd = currentSlotStart.plus({ minutes: durationMin });
-          const slotInterval = Interval.fromDateTimes(
-            currentSlotStart.minus({ minutes: bufferBefore }),
-            slotEnd.plus({ minutes: bufferAfter })
-          );
-
-          // Check for conflicts with blocks
-          const hasBlockConflict = blocks.some(b => {
-             const blockInterval = Interval.fromDateTimes(DateTime.fromJSDate(b.start_datetime), DateTime.fromJSDate(b.end_datetime));
-             return slotInterval.overlaps(blockInterval);
-          });
-
-          // Check for conflicts with appointments
-          const hasAppointmentConflict = appointments.some(a => {
-            const appInterval = Interval.fromDateTimes(DateTime.fromJSDate(a.start_datetime), DateTime.fromJSDate(a.end_datetime));
-            return slotInterval.overlaps(appInterval);
-          });
-
-          if (!hasBlockConflict && !hasAppointmentConflict && currentSlotStart >= fromDate) {
-            slots.push({
-              start: currentSlotStart.toISO()!,
-              end: slotEnd.toISO()!
-            });
-          }
-
-          currentSlotStart = currentSlotStart.plus({ minutes: slotGranularity });
+      while (currentSlot.plus({ minutes: duration }) <= ruleEnd) {
+        const slotInterval = Interval.after(currentSlot, { minutes: duration });
+        
+        const isBusy = busyIntervals.some(busy => busy.overlaps(slotInterval));
+        
+        if (!isBusy) {
+          slots.push(currentSlot.toISO()!);
         }
+        
+        // Slot increment (here we use duration, but could be 15/30 mins)
+        currentSlot = currentSlot.plus({ minutes: 30 }); 
       }
-      currentDay = currentDay.plus({ days: 1 });
     }
 
-    return {
-      slots,
-      next_available_date: slots.length === 0 ? null : null // Simplification: in a real scenarios we'd search further
-    };
+    return slots;
   }
 }

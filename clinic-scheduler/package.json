@@ -4,10 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
-    "build": "tsc",
-    "start": "node dist/src/app.js",
-    "migrate": "knex migrate:latest --knexfile src/knexfile.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
