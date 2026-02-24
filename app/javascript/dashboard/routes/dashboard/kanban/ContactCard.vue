@@ -43,6 +43,18 @@ const lastActivityAt = computed(() => {
 
 const avatarUrl = computed(() => props.contact.thumbnail || '');
 
+const nextAction = computed(() => props.contact.customAttributes?.next_action || '');
+const stagnantDays = computed(() => {
+  const lastUpdateRaw = props.contact.updatedAt || props.contact.lastActivityAt;
+  if (!lastUpdateRaw) return 0;
+  const lastUpdate = new Date(lastUpdateRaw * 1000);
+  const now = new Date();
+  const diffTime = Math.abs(now - lastUpdate);
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+});
+
+const isStagnant = computed(() => stagnantDays.value >= 3);
+
 const openContact = () => {
   window.location.href = `/app/accounts/${store.getters['getCurrentAccountId']}/contacts/${props.contact.id}`;
 };
@@ -55,8 +67,13 @@ const openConversation = () => {
 <template>
   <div 
     class="bg-white dark:bg-n-solid-2 rounded-2xl p-4 shadow-sm hover:shadow-xl transition-all cursor-pointer border border-n-weak dark:border-n-weak/50 group relative overflow-hidden"
+    :class="{ 'border-ruby-2 dark:border-ruby-900/50 bg-ruby-50/30 dark:bg-ruby-900/10': isStagnant }"
     @click="openContact"
   >
+    <div v-if="isStagnant" class="absolute top-0 right-14 bg-ruby-9 text-white text-[8px] font-bold px-2 py-0.5 rounded-b-lg uppercase tracking-wider z-10 shadow-sm animate-pulse">
+      Estagnado {{ stagnantDays }}d
+    </div>
+
     <div class="flex items-start gap-3">
       <div class="relative">
         <img
@@ -94,6 +111,11 @@ const openConversation = () => {
           <span v-else-if="email" class="i-lucide-mail size-3 opacity-50 ltr:mr-0.5" />
           {{ phone || email || t('CONTACT_PANEL.NO_TEXT') }}
         </p>
+
+        <div v-if="nextAction" class="mb-3 px-3 py-1.5 bg-n-brand/5 dark:bg-n-brand/10 border border-n-brand/20 dark:border-n-brand/30 rounded-xl flex items-center gap-2 shadow-sm">
+          <span class="i-lucide-zap size-3 text-n-brand" />
+          <span class="text-[10px] font-bold text-n-brand uppercase truncate tracking-tight">{{ nextAction }}</span>
+        </div>
 
         <div v-if="appointmentAt || professional" class="mb-3 flex flex-wrap gap-2">
           <div v-if="appointmentAt" class="flex items-center gap-1 px-2 py-0.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg">

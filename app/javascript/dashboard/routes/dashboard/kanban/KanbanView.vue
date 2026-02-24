@@ -14,12 +14,24 @@ const { t } = useI18n();
 const showManager = ref(false);
 const activeStageForLead = ref(null);
 const activeDropdownStage = ref(null);
+const selectedPipelineId = ref(null);
+const isCreatingPipeline = ref(false);
 
 const contacts = computed(() => store.getters['contacts/getContactsList']);
 const customAttributes = computed(() => store.getters['attributes/getContactAttributes']);
+const pipelines = computed(() => store.getters['pipelines/getPipelines']);
+
+const activePipeline = computed(() => {
+  if (selectedPipelineId.value) {
+    return pipelines.value.find(p => p.id === selectedPipelineId.value);
+  }
+  return pipelines.value[0];
+});
+
+const currentBoundAttributeKey = computed(() => activePipeline.value?.bound_attribute_key || 'pipeline_stage');
 
 const pipelineAttribute = computed(() => 
-  customAttributes.value.find(attr => attr.attributeKey === 'pipeline_stage')
+  customAttributes.value.find(attr => attr.attributeKey === currentBoundAttributeKey.value)
 );
 
 const stages = computed(() => {
@@ -33,8 +45,8 @@ const appointmentAtAttribute = computed(() =>
   customAttributes.value.find(attr => attr.attributeKey === 'appointment_at')
 );
 
-const appointmentProfessionalAttribute = computed(() => 
-  customAttributes.value.find(attr => attr.attributeKey === 'appointment_professional')
+const nextActionAttribute = computed(() => 
+  customAttributes.value.find(attr => attr.attributeKey === 'next_action')
 );
 
 // Local state for draggable to work correctly
@@ -58,7 +70,7 @@ const syncLocalContacts = () => {
   const newMap = {};
   stages.value.forEach(stage => {
     newMap[stage] = filteredContacts.value.filter(contact => {
-      const contactStage = contact.customAttributes?.pipeline_stage;
+      const contactStage = contact.customAttributes?.[currentBoundAttributeKey.value];
       if (!contactStage && stage === stages.value[0]) return true;
       return contactStage === stage;
     });
@@ -66,7 +78,7 @@ const syncLocalContacts = () => {
   localContactsByStage.value = newMap;
 };
 
-watch([filteredContacts, stages], syncLocalContacts, { immediate: true });
+watch([filteredContacts, stages, currentBoundAttributeKey], syncLocalContacts, { immediate: true });
 
 const onMove = (evt, stage) => {
   const { added } = evt;
@@ -76,10 +88,15 @@ const onMove = (evt, stage) => {
       id: element.id,
       customAttributes: {
         ...(element.customAttributes || {}),
-        pipeline_stage: stage,
+        [currentBoundAttributeKey.value]: stage,
       },
     });
   }
+};
+
+const openPipelineManager = (mode = 'edit') => {
+  isCreatingPipeline.value = mode === 'create';
+  showManager.value = true;
 };
 
 const columnActions = (stage) => [
@@ -87,7 +104,7 @@ const columnActions = (stage) => [
     label: 'Configurar Etapas',
     value: 'configure',
     icon: 'i-lucide-settings',
-    action: () => { showManager.value = true; activeDropdownStage.value = null; },
+    action: () => { openPipelineManager('edit'); activeDropdownStage.value = null; },
   }
 ];
 
@@ -96,7 +113,7 @@ const handleAction = (item) => {
 };
 
 const ensurePipelineAttribute = async () => {
-  if (!pipelineAttribute.value) {
+  if (!pipelineAttribute.value && (!pipelines.value || pipelines.value.length === 0)) {
     try {
       await store.dispatch('attributes/create', {
         attribute_display_name: 'Pipeline Stage',
@@ -105,8 +122,27 @@ const ensurePipelineAttribute = async () => {
         attribute_display_type: 'list',
         attribute_values: ['Lead', 'Qualificado', 'Proposta', 'Negociação', 'Ganhos', 'Perdas'],
       });
+      // After creating default attribute, create default pipeline
+      await store.dispatch('pipelines/create', {
+        name: 'CRM',
+        bound_attribute_key: 'pipeline_stage',
+        is_attribute_driven: true,
+      });
     } catch (error) {
-      console.error('Failed to create pipeline attribute', error);
+      console.error('Failed to create default pipeline', error);
+    }
+  }
+
+  if (!nextActionAttribute.value) {
+    try {
+      await store.dispatch('attributes/create', {
+        attribute_display_name: 'Próxima Ação',
+        attribute_key: 'next_action',
+        attribute_model: 'contact_attribute',
+        attribute_display_type: 'text',
+      });
+    } catch (error) {
+      console.error('Failed to create next_action attribute', error);
     }
   }
 
@@ -142,6 +178,7 @@ onMounted(async () => {
   await store.dispatch('attributes/get');
   await store.dispatch('contacts/get');
   await store.dispatch('agents/get');
+  await store.dispatch('pipelines/get');
   ensurePipelineAttribute();
 });
 </script>
@@ -149,9 +186,24 @@ onMounted(async () => {
 <template>
   <div class="flex flex-col h-full w-full overflow-hidden bg-n-slate-2 dark:bg-n-solid-1 p-8 gap-8">
     <header class="flex justify-between items-start">
-      <div>
-        <h1 class="text-3xl font-bold text-n-slate-12 tracking-tight">CRM</h1>
-        <p class="text-sm text-n-slate-10 mt-1">Gerencie seus leads e oportunidades no funil de vendas.</p>
+      <div class="flex items-center gap-6">
+        <div>
+          <h1 class="text-3xl font-bold text-n-slate-12 tracking-tight">CRM</h1>
+          <p class="text-sm text-n-slate-10 mt-1">Gerencie seus leads e oportunidades no funil de vendas.</p>
+        </div>
+        
+        <div v-if="pipelines.length > 0" class="flex items-center gap-2 bg-white dark:bg-n-solid-2 border border-n-weak dark:border-n-weak/50 rounded-2xl px-4 py-2 shadow-sm transition-all hover:border-n-brand/30">
+          <span class="i-lucide-layout-grid size-4 text-n-brand" />
+          <select 
+            v-model="selectedPipelineId" 
+            class="bg-transparent text-sm font-bold text-n-slate-12 focus:outline-none cursor-pointer pr-2"
+          >
+            <option :value="null">Selecione o Funil...</option>
+            <option v-for="p in pipelines" :key="p.id" :value="p.id">
+              {{ p.name }}
+            </option>
+          </select>
+        </div>
       </div>
       <div class="flex items-center gap-3">
         <div v-if="isUpdating" class="flex items-center gap-2 px-3 py-1.5 bg-n-brand/5 border border-n-brand/20 rounded-full animate-pulse">
@@ -168,7 +220,13 @@ onMounted(async () => {
         </div>
         <button
           class="px-5 py-2.5 bg-n-brand/10 text-n-brand border border-n-brand/20 rounded-xl text-sm font-bold hover:bg-n-brand/20 transition-all active:scale-95 whitespace-nowrap"
-          @click="showManager = true"
+          @click="openPipelineManager('create')"
+        >
+          Novo Funil
+        </button>
+        <button
+          class="px-5 py-2.5 bg-n-brand text-white rounded-xl text-sm font-bold hover:bg-n-brand-strong transition-all active:scale-95 shadow-lg shadow-n-brand/20"
+          @click="openPipelineManager('edit')"
         >
           Configurar Etapas
         </button>
@@ -182,9 +240,9 @@ onMounted(async () => {
         class="flex flex-col w-80 flex-shrink-0 bg-white/50 dark:bg-n-slate-11/10 rounded-2xl border border-n-weak shadow-sm"
       >
         <div class="p-5 flex items-center justify-between border-b border-n-weak bg-white/30 dark:bg-n-solid-2 rounded-t-2xl relative">
-          <h2 class="font-bold text-n-slate-12 text-sm">
+          <h2 class="font-bold text-n-slate-12 text-sm flex items-center gap-2">
             {{ stage }}
-            <span class="ml-2 text-n-slate-9 font-normal text-xs">
+            <span class="size-5 flex items-center justify-center bg-n-slate-3 dark:bg-n-solid-3 rounded-full text-[10px] text-n-slate-10 font-bold">
               {{ localContactsByStage[stage]?.length || 0 }}
             </span>
           </h2>
@@ -229,12 +287,12 @@ onMounted(async () => {
       
       <button
         class="flex flex-col items-center justify-center w-80 flex-shrink-0 border-2 border-dashed border-n-weak rounded-2xl hover:border-n-brand/40 hover:bg-n-brand/5 transition-all group p-8"
-        @click="showManager = true"
+        @click="openPipelineManager('create')"
       >
         <div class="size-12 rounded-full bg-n-brand/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <span class="i-lucide-plus size-6 text-n-brand" />
         </div>
-        <span class="font-bold text-n-slate-11 text-sm">Nova Etapa</span>
+        <span class="font-bold text-n-slate-11 text-sm">Criar Novo Funil</span>
       </button>
     </div>
 
@@ -242,8 +300,9 @@ onMounted(async () => {
 
     <!-- Transition or just v-if for modal -->
     <PipelineManager
-      v-if="showManager && pipelineAttribute"
-      :attribute="pipelineAttribute"
+      v-if="showManager"
+      :pipeline="isCreatingPipeline ? null : activePipeline"
+      :attribute="isCreatingPipeline ? null : pipelineAttribute"
       @close="showManager = false"
     />
 
