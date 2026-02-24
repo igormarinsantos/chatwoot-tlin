@@ -80,3 +80,8 @@ remove_orphan_conversations_job:
   cron: '0 */12 * * *'
   class: 'Internal::RemoveOrphanConversationsJob'
   queue: housekeeping
+
+clinic_scheduler_reminders:
+  cron: '*/5 * * * *'
+  class: 'ClinicScheduler::ReminderJob'
+  queue: scheduled_jobs

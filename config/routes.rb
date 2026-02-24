@@ -39,6 +39,25 @@ Rails.application.routes.draw do
   get '/api', to: 'api#index'
   namespace :api, defaults: { format: 'json' } do
     namespace :v1 do
+      namespace :clinic_scheduler do
+        resources :clinics, only: [] do
+          member do
+            get :availability
+            post :holds, to: 'holds#create'
+            post :appointments, to: 'appointments#create'
+            post 'webhooks/subscriptions', to: 'webhook_subscriptions#create'
+          end
+        end
+        resources :holds, only: [] do
+          post :confirm, on: :member
+        end
+        resources :appointments, only: [] do
+          member do
+            post :cancel
+            post :reschedule
+          end
+        end
+      end
       # ----------------------------------
       # start of account scoped api routes
       resources :accounts, only: [:create, :show, :update] do
@@ -439,16 +458,6 @@ Rails.application.routes.draw do
               get :inbox
               get :label
               get :channel
-            end
-          end
-          resources :appointments, only: [] do
-            collection do
-              post :confirm
-            end
-            member do
-              post :cancel
-              post :reschedule
-              post 'confirmations/receive', to: 'appointments#receive_confirmation'
             end
           end
           resources :reports, only: [:index] do
