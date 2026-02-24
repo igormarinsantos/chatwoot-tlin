@@ -4,7 +4,8 @@ const state = {
   professionals: [],
   procedures: [],
   appointments: [],
-  activeClinicId: 'default-clinic', // In a real multi-tenant it would be fetched
+  clinicSettings: null,
+  activeClinicId: '1', // Default ID used in auto-creation
   uiFlags: {
     isFetching: false,
     isCreating: false,
@@ -15,16 +16,33 @@ const getters = {
   getProfessionals: _state => _state.professionals,
   getProcedures: _state => _state.procedures,
   getAppointments: _state => _state.appointments,
+  getClinicSettings: _state => _state.clinicSettings,
 };
 
 const actions = {
+  fetchClinicSettings: async ({ commit, state }) => {
+    try {
+      const response = await ClinicSchedulerAPI.getClinics(state.activeClinicId);
+      commit('SET_CLINIC_SETTINGS', response.data);
+    } catch (error) {
+      console.error('Error fetching clinic settings:', error);
+    }
+  },
+  updateClinicSettings: async ({ commit, state }, data) => {
+    try {
+      const response = await ClinicSchedulerAPI.updateClinic(state.activeClinicId, data);
+      commit('SET_CLINIC_SETTINGS', response.data);
+    } catch (error) {
+      console.error('Error updating clinic settings:', error);
+    }
+  },
   fetchProfessionals: async ({ commit, state }) => {
     commit('SET_UI_FLAG', { isFetching: true });
     try {
       const response = await ClinicSchedulerAPI.getProfessionals(state.activeClinicId);
       commit('SET_PROFESSIONALS', response.data);
     } catch (error) {
-      // Ignore
+      console.error('Error fetching professionals:', error);
     } finally {
       commit('SET_UI_FLAG', { isFetching: false });
     }
@@ -35,7 +53,7 @@ const actions = {
       const response = await ClinicSchedulerAPI.getProcedures(state.activeClinicId);
       commit('SET_PROCEDURES', response.data);
     } catch (error) {
-      // Ignore
+      console.error('Error fetching procedures:', error);
     } finally {
       commit('SET_UI_FLAG', { isFetching: false });
     }
@@ -49,7 +67,38 @@ const actions = {
       commit('SET_UI_FLAG', { isCreating: false });
     }
   },
-  // Add more actions as needed...
+  updateProfessionalProcedures: async ({ dispatch }, { id, procedure_ids }) => {
+    try {
+      await ClinicSchedulerAPI.updateProfessionalProcedures(id, procedure_ids);
+      dispatch('fetchProfessionals');
+    } catch (error) {
+      console.error('Error updating professional procedures:', error);
+    }
+  },
+  deleteProfessional: async ({ dispatch }, id) => {
+    try {
+      await ClinicSchedulerAPI.deleteProfessional(id);
+      dispatch('fetchProfessionals');
+    } catch (error) {
+      console.error('Error deleting professional:', error);
+    }
+  },
+  createProcedure: async ({ commit, state }, data) => {
+    try {
+      const response = await ClinicSchedulerAPI.createProcedure(state.activeClinicId, data);
+      commit('ADD_PROCEDURE', response.data);
+    } catch (error) {
+      console.error('Error creating procedure:', error);
+    }
+  },
+  deleteProcedure: async ({ dispatch }, id) => {
+    try {
+      await ClinicSchedulerAPI.deleteProcedure(id);
+      dispatch('fetchProcedures');
+    } catch (error) {
+      console.error('Error deleting procedure:', error);
+    }
+  },
 };
 
 const mutations = {
@@ -65,8 +114,14 @@ const mutations = {
   ADD_PROFESSIONAL(_state, professional) {
     _state.professionals.push(professional);
   },
+  ADD_PROCEDURE(_state, procedure) {
+    _state.procedures.push(procedure);
+  },
   SET_APPOINTMENTS(_state, appointments) {
     _state.appointments = appointments;
+  },
+  SET_CLINIC_SETTINGS(_state, settings) {
+    _state.clinicSettings = settings;
   },
 };
 

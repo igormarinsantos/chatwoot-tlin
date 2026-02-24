@@ -11,8 +11,11 @@ const api = axios.create({
 
 export default {
   // Clinics
-  getClinics() {
-    return api.get('/clinics');
+  getClinics(id) {
+    return api.get(`/clinics/${id}`);
+  },
+  updateClinic(id, data) {
+    return api.put(`/clinics/${id}`, data);
   },
 
   // Professionals
@@ -22,6 +25,12 @@ export default {
   createProfessional(clinicId, data) {
     return api.post(`/clinics/${clinicId}/professionals`, data);
   },
+  updateProfessionalProcedures(id, procedure_ids) {
+    return api.put(`/professionals/${id}/procedures`, { procedure_ids });
+  },
+  deleteProfessional(id) {
+    return api.delete(`/professionals/${id}`);
+  },
 
   // Procedures
   getProcedures(clinicId) {
@@ -29,6 +38,9 @@ export default {
   },
   createProcedure(clinicId, data) {
     return api.post(`/clinics/${clinicId}/procedures`, data);
+  },
+  deleteProcedure(id) {
+    return api.delete(`/procedures/${id}`);
   },
 
   // Availability

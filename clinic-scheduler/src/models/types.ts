@@ -2,6 +2,7 @@ export interface Clinic {
   id: string;
   name: string;
   timezone: string;
+  operating_hours?: any;
   created_at: Date;
   updated_at: Date;
 }

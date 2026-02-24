@@ -110,6 +110,23 @@ services:
       - 1025:1025
       - 8025:8025
 
+  clinic-scheduler:
+    build:
+      context: ./clinic-scheduler
+    image: clinic-scheduler:development
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+    environment:
+      - DATABASE_URL=postgres://postgres:@postgres:5432/chatwoot
+      - PORT=4000
+      - NODE_ENV=development
+    volumes:
+      - ./clinic-scheduler:/app:delegated
+      - /app/node_modules
+    command: npm run dev
+
 volumes:
   postgres:
   redis:

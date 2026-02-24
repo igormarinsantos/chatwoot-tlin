@@ -4,18 +4,21 @@ import { useStore } from 'vuex';
 import ProfessionalManager from './components/ProfessionalManager.vue';
 import ProcedureManager from './components/ProcedureManager.vue';
 import CalendarView from './components/CalendarView.vue';
+import ClinicSettings from './components/ClinicSettings.vue';
 
 const store = useStore();
-const activeTab = ref('agenda'); // agenda, management
+const activeTab = ref('agenda'); // agenda, management, settings
 
 onMounted(() => {
+  store.dispatch('clinicScheduler/fetchClinicSettings');
   store.dispatch('clinicScheduler/fetchProfessionals');
   store.dispatch('clinicScheduler/fetchProcedures');
 });
 
 const tabs = [
   { id: 'agenda', name: 'Agenda', icon: 'i-lucide-calendar' },
-  { id: 'management', name: 'Gestão de Clínica', icon: 'i-lucide-settings' },
+  { id: 'management', name: 'Gestão de Clínica', icon: 'i-lucide-users' },
+  { id: 'settings', name: 'Configurações', icon: 'i-lucide-settings' },
 ];
 </script>
 
@@ -48,6 +51,10 @@ const tabs = [
     <main class="flex-1 overflow-hidden">
       <div v-if="activeTab === 'agenda'" class="h-full">
         <CalendarView />
+      </div>
+
+      <div v-else-if="activeTab === 'settings'" class="h-full overflow-y-auto p-8 max-w-4xl mx-auto">
+        <ClinicSettings />
       </div>
 
       <div v-else class="h-full overflow-y-auto p-8 space-y-12">
