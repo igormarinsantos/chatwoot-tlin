@@ -9,6 +9,7 @@ import { frontendURL } from '../../helper/URLHelper';
 import helpcenterRoutes from './helpcenter/helpcenter.routes';
 import campaignsRoutes from './campaigns/campaigns.routes';
 import agendaRoutes from './agenda/agenda.routes';
+import clinicRoutes from './clinic/clinic.routes';
 import { routes as captainRoutes } from './captain/captain.routes';
 import dashboardAppsRoutes from './dashboardApps/dashboardApps.routes';
 import AppContainer from './Dashboard.vue';
@@ -23,6 +24,7 @@ export default {
       children: [
         ...captainRoutes,
         ...agendaRoutes,
+        ...clinicRoutes,
         ...inboxRoutes,
         ...conversation.routes,
         ...settings.routes,

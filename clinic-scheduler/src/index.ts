@@ -1,32 +1,26 @@
 import express from "express";
 import dotenv from "dotenv";
-import { ClinicController } from "./controllers/ClinicController";
+import router from "./routes";
 import { ReminderJob } from "./jobs/ReminderJob";
 
 dotenv.config();
 
 const app = express();
+const port = process.env.PORT || 4000;
+
 app.use(express.json());
 
-const PORT = process.env.PORT || 3001;
+// Main Router
+app.use("/api", router);
 
-// API Routes
+// Health Check
 app.get("/health", (req, res) => {
   res.json({ status: "ok", service: "clinic-scheduler" });
 });
 
-// Clinic Scheduler Endpoints
-app.get("/clinics/:clinicId/availability", ClinicController.getAvailability);
-app.post("/clinics/:clinicId/holds", ClinicController.createHold);
-app.post("/clinics/:clinicId/holds/:token/confirm", ClinicController.confirmHold);
-app.post("/clinics/:clinicId/appointments/:id/cancel", ClinicController.cancelAppointment);
-app.post("/clinics/:clinicId/webhooks/subscriptions", ClinicController.subscribeWebhook);
+// Start Background Jobs
+ReminderJob.start();
 
-// Initialize Jobs
-ReminderJob.init();
-
-app.listen(PORT, () => {
-  console.log(`Clinic Scheduler service running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`Clinic Scheduler service running on port ${port}`);
 });
-
-export default app;

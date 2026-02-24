@@ -332,6 +332,13 @@ const menuItems = computed(() => {
       activeOn: ['agenda_view'],
     },
     {
+      name: 'Clinic',
+      label: t('SIDEBAR.CLINICA'),
+      icon: 'i-lucide-activity',
+      to: accountScopedRoute('clinic_dashboard'),
+      activeOn: ['clinic_dashboard'],
+    },
+    {
       name: 'Captain',
       icon: 'i-woot-captain',
       label: t('SIDEBAR.CAPTAIN'),

@@ -1,60 +1,81 @@
 import cron from "node-cron";
 import { DateTime } from "luxon";
-import db from "../db/knex";
+import db from "../db";
+import { Appointment, Clinic } from "../models/types";
 import { WebhookService } from "../services/WebhookService";
 
 export class ReminderJob {
-  static init() {
+  static start() {
     // Run every 5 minutes
     cron.schedule("*/5 * * * *", async () => {
-      console.log("Running ReminderJob...");
-      await this.processD1Reminders();
-      await this.processD0Reminders();
+      console.log("Running reminder job...");
+      await this.processReminders();
     });
   }
 
-  private static async processD1Reminders() {
-    const tomorrowStart = DateTime.now().plus({ days: 1 }).startOf("day").toJSDate();
-    const tomorrowEnd = DateTime.now().plus({ days: 1 }).endOf("day").toJSDate();
+  static async processReminders() {
+    const clinics = await db<Clinic>("clinics").select("*");
 
-    const appointments = await db("appointments")
-      .where({ status: "CONFIRMED" })
-      .whereBetween("start_datetime", [tomorrowStart, tomorrowEnd])
-      .whereRaw("(metadata->'reminders'->>'d1_sent_at') IS NULL");
-
-    for (const appt of appointments) {
-      await WebhookService.dispatch(appt.clinic_id, "reminder.d1", { appointment: appt });
+    for (const clinic of clinics) {
+      const now = DateTime.now().setZone(clinic.timezone);
       
-      // Mark as sent
-      const metadata = appt.metadata || {};
-      const reminders = metadata.reminders || {};
-      reminders.d1_sent_at = DateTime.now().toISO();
-      metadata.reminders = reminders;
+      // 1. D-1 Reminders (Consults tomorrow)
+      const tomorrowStart = now.plus({ days: 1 }).startOf("day");
+      const tomorrowEnd = now.plus({ days: 1 }).endOf("day");
 
-      await db("appointments").where({ id: appt.id }).update({ metadata });
+      const d1Appointments = await db<Appointment>("appointments")
+        .where({ clinic_id: clinic.id, status: "CONFIRMED" })
+        .andWhere("start_datetime", ">=", tomorrowStart.toJSDate())
+        .andWhere("start_datetime", "<=", tomorrowEnd.toJSDate());
+
+      for (const appt of d1Appointments) {
+        const metadata = JSON.parse(appt.metadata || "{}");
+        if (!metadata.reminder?.d1_sent_at) {
+          await this.triggerReminder(appt, "reminder.d1", clinic.timezone);
+        }
+      }
+
+      // 2. D-0 Reminders (Consults today in ex: 2 hours)
+      const twoHoursFromNow = now.plus({ hours: 2 });
+      const twoHoursFifteenFromNow = now.plus({ hours: 2, minutes: 15 });
+
+      const d0Appointments = await db<Appointment>("appointments")
+        .where({ clinic_id: clinic.id, status: "CONFIRMED" })
+        .andWhere("start_datetime", ">=", twoHoursFromNow.toJSDate())
+        .andWhere("start_datetime", "<=", twoHoursFifteenFromNow.toJSDate());
+
+      for (const appt of d0Appointments) {
+        const metadata = JSON.parse(appt.metadata || "{}");
+        if (!metadata.reminder?.d0_sent_at) {
+          await this.triggerReminder(appt, "reminder.d0", clinic.timezone);
+        }
+      }
     }
   }
 
-  private static async processD0Reminders() {
-    const now = DateTime.now();
-    const twoHoursFromNow = now.plus({ hours: 2 }).toJSDate();
-    const threeHoursFromNow = now.plus({ hours: 3 }).toJSDate(); // Window of 1h to avoid missing
+  static async triggerReminder(appointment: Appointment, event: string, timezone: string) {
+    const metadata = JSON.parse(appointment.metadata || "{}");
+    const reminderData = metadata.reminder || {};
+    
+    reminderData[`${event.split(".")[1]}_sent_at`] = DateTime.now().setZone(timezone).toISO();
 
-    const appointments = await db("appointments")
-      .where({ status: "CONFIRMED" })
-      .whereBetween("start_datetime", [twoHoursFromNow, threeHoursFromNow])
-      .whereRaw("(metadata->'reminders'->>'d0_sent_at') IS NULL");
+    await db<Appointment>("appointments")
+      .where({ id: appointment.id })
+      .update({
+        metadata: JSON.stringify({
+          ...metadata,
+          reminder: reminderData
+        })
+      });
 
-    for (const appt of appointments) {
-      await WebhookService.dispatch(appt.clinic_id, "reminder.d0", { appointment: appt });
-
-      // Mark as sent
-      const metadata = appt.metadata || {};
-      const reminders = metadata.reminders || {};
-      reminders.d0_sent_at = DateTime.now().toISO();
-      metadata.reminders = reminders;
-
-      await db("appointments").where({ id: appt.id }).update({ metadata });
-    }
+    await WebhookService.dispatch(appointment.clinic_id, event, {
+      appointment: {
+        id: appointment.id,
+        start_datetime: appointment.start_datetime,
+        end_datetime: appointment.end_datetime,
+        patient_phone: appointment.patient_phone,
+        metadata: JSON.parse(appointment.metadata)
+      }
+    });
   }
 }
