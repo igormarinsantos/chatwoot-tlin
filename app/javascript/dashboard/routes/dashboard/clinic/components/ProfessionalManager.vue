@@ -6,15 +6,14 @@ const store = useStore();
 const professionals = computed(() => store.getters['clinicScheduler/getProfessionals']);
 const procedures = computed(() => store.getters['clinicScheduler/getProcedures']);
 const isCreating = ref(false);
-const editingProfessional = ref(null);
 const newProfessional = ref({ name: '', color: 'blue', procedure_ids: [] });
 
 const professionalColors = [
-  { id: 'blue', hex: '#3b82f6', classes: 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400' },
-  { id: 'purple', hex: '#a855f7', classes: 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400' },
-  { id: 'pink', hex: '#ec4899', classes: 'bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400' },
-  { id: 'orange', hex: '#f97316', classes: 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400' },
-  { id: 'green', hex: '#22c55e', classes: 'bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400' },
+  { id: 'blue', classes: 'bg-blue-500' },
+  { id: 'purple', classes: 'bg-purple-500' },
+  { id: 'pink', classes: 'bg-pink-500' },
+  { id: 'orange', classes: 'bg-orange-500' },
+  { id: 'green', classes: 'bg-green-500' },
 ];
 
 const addProfessional = async () => {
@@ -30,134 +29,129 @@ const deleteProfessional = async (id) => {
   }
 };
 
-const toggleProcedure = (prof, procId) => {
-  const currentIds = prof.procedures?.map(p => p.id) || [];
-  const newIds = currentIds.includes(procId)
-    ? currentIds.filter(id => id !== procId)
-    : [...currentIds, procId];
-  
-  store.dispatch('clinicScheduler/updateProfessionalProcedures', {
-    id: prof.id,
-    procedure_ids: newIds
-  });
+const toggleProcedure = (procId) => {
+  if (newProfessional.value.procedure_ids.includes(procId)) {
+    newProfessional.value.procedure_ids = newProfessional.value.procedure_ids.filter(id => id !== procId);
+  } else {
+    newProfessional.value.procedure_ids.push(procId);
+  }
 };
 </script>
 
 <template>
-  <div class="bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak dark:border-n-weak/50 overflow-hidden shadow-sm">
-    <header class="p-6 border-b border-n-weak dark:border-n-weak/50 flex justify-between items-center">
+  <div class="bg-[#18181E] rounded-2xl flex flex-col h-full border border-[#26262F]">
+    <header class="p-5 flex justify-between items-center w-full">
       <div>
-        <h3 class="text-lg font-bold text-n-slate-12">Profissionais</h3>
-        <p class="text-xs text-n-slate-10 uppercase font-bold tracking-widest mt-1">Especialistas da Clínica</p>
+        <h3 class="text-white font-semibold text-lg">Profissionais</h3>
+        <p class="text-[#8B8B9B] text-[10px] uppercase font-bold tracking-wider mt-0.5">Especialistas da Clínica</p>
       </div>
       <button
         @click="isCreating = true"
-        class="size-10 bg-n-brand/10 text-n-brand rounded-xl flex items-center justify-center hover:bg-n-brand/20 transition-all"
+        class="w-8 h-8 rounded-full bg-[#26262F] flex items-center justify-center text-[#B597FF] hover:bg-[#30303B] transition-colors"
       >
-        <span class="i-lucide-plus size-5" />
+        <span class="i-lucide-plus w-4 h-4" />
       </button>
     </header>
 
-    <div class="p-6 space-y-4">
+    <div class="p-5 space-y-4 flex-1 overflow-y-auto custom-scrollbar">
       <!-- Create Flow -->
-      <div v-if="isCreating" class="p-6 bg-n-slate-1 dark:bg-n-solid-3 rounded-2xl border border-n-brand/30 space-y-4 animate-in fade-in slide-in-from-top-2">
+      <div v-if="isCreating" class="p-5 bg-[#1F1F27] rounded-xl border border-[#26262F] space-y-4">
         <input
           v-model="newProfessional.name"
-          placeholder="Nome do profissional..."
-          class="w-full px-4 py-2 bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl outline-none focus:border-n-brand focus:ring-1 focus:ring-n-brand text-sm"
+          placeholder="Nome do profissional.."
+          class="w-full px-4 py-2.5 bg-[#18181E] border border-[#26262F] text-white rounded-lg outline-none focus:border-[#B597FF] text-sm placeholder-[#6C6C7D]"
         />
-
+        
         <div class="space-y-2">
-          <p class="text-xs font-bold text-n-slate-10">Cor de Identificação:</p>
+          <p class="text-xs text-[#8B8B9B]">Cor de Identificação:</p>
           <div class="flex gap-2">
             <button
               v-for="color in professionalColors"
               :key="color.id"
               @click="newProfessional.color = color.id"
-              class="size-8 rounded-full border-2 transition-all flex items-center justify-center"
-              :class="[color.classes, newProfessional.color === color.id ? 'border-n-brand scale-110 shadow-sm' : 'border-transparent']"
+              class="w-6 h-6 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+              :class="[color.classes, newProfessional.color === color.id ? 'ring-2 ring-white ring-offset-2 ring-offset-[#1F1F27]' : 'opacity-50 hover:opacity-100']"
             >
-              <span v-if="newProfessional.color === color.id" class="i-lucide-check size-4" />
+              <span v-if="newProfessional.color === color.id" class="i-lucide-check w-3 h-3 text-white" />
             </button>
           </div>
         </div>
-        
+
         <div class="space-y-2">
-          <p class="text-xs font-bold text-n-slate-10">Procedimentos que atende:</p>
+          <p class="text-xs text-[#8B8B9B]">Procedimentos que atende:</p>
           <div class="flex flex-wrap gap-2">
             <button
               v-for="proc in procedures"
               :key="proc.id"
-              @click="newProfessional.procedure_ids.includes(proc.id) 
-                ? newProfessional.procedure_ids = newProfessional.procedure_ids.filter(id => id !== proc.id)
-                : newProfessional.procedure_ids.push(proc.id)"
-              class="px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all"
+              @click="toggleProcedure(proc.id)"
+              class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border"
               :class="newProfessional.procedure_ids.includes(proc.id) 
-                ? 'bg-n-brand text-white border-n-brand' 
-                : 'bg-white dark:bg-n-solid-2 text-n-slate-9 border-n-weak'"
+                ? 'bg-[#B597FF] text-white border-[#B597FF]' 
+                : 'bg-[#18181E] text-[#8B8B9B] border-[#26262F] hover:border-[#8B8B9B]'"
             >
               {{ proc.name }}
             </button>
           </div>
         </div>
 
-        <div class="flex gap-2">
-          <button @click="isCreating = false" class="flex-1 py-2 text-xs font-bold text-n-slate-10 hover:bg-n-alpha-1 rounded-lg">Cancelar</button>
-          <button @click="addProfessional" class="flex-1 py-2 text-xs font-bold bg-n-brand text-white rounded-lg">Adicionar</button>
+        <div class="flex items-center gap-3 pt-2">
+          <button @click="isCreating = false" class="text-[#8B8B9B] text-xs font-medium hover:text-white px-2">Cancelar</button>
+          <button @click="addProfessional" class="flex-1 py-2.5 text-sm font-semibold bg-[#B597FF] text-white rounded-lg hover:bg-[#9d7cf0] transition-colors">Adicionar</button>
         </div>
       </div>
 
       <!-- List -->
-      <div class="space-y-4">
+      <div class="space-y-3">
         <div
           v-for="prof in professionals"
           :key="prof.id"
-          class="group p-4 bg-n-slate-1 dark:bg-n-solid-3/50 hover:bg-white dark:hover:bg-n-solid-3 rounded-2xl border border-transparent hover:border-n-weak transition-all"
+          class="group p-4 bg-[#1F1F27] rounded-xl border border-[#26262F] hover:border-[#30303B] transition-colors flex flex-col justify-between"
         >
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-4">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
               <div 
-                class="size-10 rounded-full font-bold flex items-center justify-center"
-                :class="professionalColors.find(c => c.id === (prof.color || 'blue'))?.classes || 'bg-n-brand/10 text-n-brand'"
+                class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
+                :class="professionalColors.find(c => c.id === (prof.color || 'blue'))?.classes || 'bg-[#B597FF]'"
               >
                 {{ prof.name.charAt(0).toUpperCase() }}
               </div>
               <div>
-                <p class="font-bold text-n-slate-12 text-sm">{{ prof.name }}</p>
-                <p class="text-[10px] text-n-slate-9 font-bold">PROFISSIONAL</p>
+                <p class="font-semibold text-white text-sm">{{ prof.name }}</p>
+                <p class="text-[9px] text-[#8B8B9B] font-bold tracking-wider">PROFISSIONAL</p>
               </div>
             </div>
-            <button @click="deleteProfessional(prof.id)" class="opacity-0 group-hover:opacity-100 p-2 text-n-slate-8 hover:text-red-500 transition-all">
-              <span class="i-lucide-trash-2 size-4" />
+            <button @click="deleteProfessional(prof.id)" class="opacity-0 group-hover:opacity-100 p-1.5 text-[#8B8B9B] hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all">
+              <span class="i-lucide-trash-2 w-4 h-4" />
             </button>
           </div>
 
-          <div class="space-y-2 pl-14">
-            <p class="text-[9px] font-bold text-n-slate-8 uppercase tracking-tighter">Atendimentos:</p>
+          <div class="mt-4 pt-3 border-t border-[#26262F]">
+            <p class="text-[9px] font-bold text-[#8B8B9B] uppercase tracking-wider mb-2">Atendimentos</p>
             <div class="flex flex-wrap gap-1.5">
-              <button
-                v-for="proc in procedures"
-                :key="proc.id"
-                @click="toggleProcedure(prof, proc.id)"
-                class="px-2 py-1 rounded-md text-[9px] font-bold border transition-all"
-                :class="prof.procedures?.some(p => p.id === proc.id)
-                  ? 'bg-n-brand/10 text-n-brand border-n-brand/20' 
-                  : 'bg-white dark:bg-n-solid-4 text-n-slate-7 border-n-weak/50'"
+              <div
+                v-for="procId in (prof.procedures || []).map(p => p.id)"
+                :key="procId"
+                class="px-2.5 py-1 rounded bg-white text-[#111115] text-[10px] font-bold"
               >
-                {{ proc.name }}
-              </button>
-              <div v-if="!procedures.length" class="text-[9px] text-n-slate-8 italic">Cadastre procedimentos primeiro</div>
+                {{ procedures.find(p => p.id === procId)?.name || 'Desconhecido' }}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div v-if="!professionals.length && !isCreating" class="py-12 text-center space-y-3">
-        <div class="size-12 bg-n-slate-3 dark:bg-n-solid-3 rounded-full flex items-center justify-center mx-auto grayscale opacity-50">
-          <span class="i-lucide-users size-6" />
-        </div>
-        <p class="text-sm text-n-slate-9">Nenhum profissional cadastrado.</p>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #26262F;
+  border-radius: 4px;
+}
+</style>

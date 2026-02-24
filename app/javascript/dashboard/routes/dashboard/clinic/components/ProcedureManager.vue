@@ -18,94 +18,102 @@ const addProcedure = async () => {
   newProcedure.value = { name: '', duration_minutes: 30, price: null };
   isCreating.value = false;
 };
+
+const deleteProcedure = async (id) => {
+  if (confirm('Deseja excluir este procedimento?')) {
+    await store.dispatch('clinicScheduler/deleteProcedure', id);
+  }
+};
 </script>
 
 <template>
-  <div class="bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak dark:border-n-weak/50 overflow-hidden shadow-sm">
-    <header class="p-6 border-b border-n-weak dark:border-n-weak/50 flex justify-between items-center">
+  <div class="bg-[#18181E] rounded-2xl flex flex-col h-full border border-[#26262F]">
+    <header class="p-5 flex justify-between items-center w-full">
       <div>
-        <h3 class="text-lg font-bold text-n-slate-12">Procedimentos</h3>
-        <p class="text-xs text-n-slate-10 uppercase font-bold tracking-widest mt-1">Serviços Oferecidos</p>
+        <h3 class="text-white font-semibold text-lg">Procedimentos</h3>
+        <p class="text-[#8B8B9B] text-[10px] uppercase font-bold tracking-wider mt-0.5">Serviços Oferecidos</p>
       </div>
       <button
         @click="isCreating = true"
-        class="size-10 bg-n-brand/10 text-n-brand rounded-xl flex items-center justify-center hover:bg-n-brand/20 transition-all"
+        class="w-8 h-8 rounded-full bg-[#26262F] flex items-center justify-center text-[#B597FF] hover:bg-[#30303B] transition-colors"
       >
-        <span class="i-lucide-plus size-5" />
+        <span class="i-lucide-plus w-4 h-4" />
       </button>
     </header>
 
-    <div class="p-6 space-y-4">
-      <div v-if="isCreating" class="p-4 bg-n-slate-1 dark:bg-n-solid-3 rounded-2xl border border-n-brand/30 space-y-4 animate-in fade-in slide-in-from-top-2">
-        <div class="space-y-4">
-          <input
-            v-model="newProcedure.name"
-            placeholder="Nome do procedimento..."
-            class="w-full px-4 py-2 bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl outline-none focus:border-n-brand focus:ring-1 focus:ring-n-brand text-sm"
-          />
-          <div class="flex items-center gap-4">
-            <div class="flex items-center gap-3">
-              <span class="text-xs font-bold text-n-slate-10">Duração (min):</span>
-              <input
-                v-model.number="newProcedure.duration_minutes"
-                type="number"
-                class="w-24 px-3 py-1.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg outline-none focus:border-n-brand text-xs font-bold"
-              />
-            </div>
-            <div class="flex items-center gap-3">
-              <span class="text-xs font-bold text-n-slate-10">Valor (R$):</span>
-              <input
-                v-model.number="newProcedure.price"
-                type="number"
-                placeholder="Ex: 150.00"
-                step="0.01"
-                class="w-32 px-3 py-1.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg outline-none focus:border-n-brand text-xs font-bold"
-              />
-            </div>
+    <div class="p-5 space-y-4 flex-1 overflow-y-auto custom-scrollbar">
+      <div v-if="isCreating" class="p-5 bg-[#1F1F27] rounded-xl border border-[#26262F] space-y-4">
+        <input
+          v-model="newProcedure.name"
+          placeholder="Nome do procedimento.."
+          class="w-full px-4 py-2.5 bg-[#18181E] border border-[#26262F] text-white rounded-lg outline-none focus:border-[#B597FF] text-sm placeholder-[#6C6C7D]"
+        />
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1.5">
+            <span class="text-xs text-[#8B8B9B]">Duração (min):</span>
+            <input
+              v-model.number="newProcedure.duration_minutes"
+              type="number"
+              class="w-full px-3 py-2 bg-[#18181E] border border-[#26262F] text-white rounded-lg outline-none focus:border-[#B597FF] text-sm"
+            />
+          </div>
+          <div class="space-y-1.5">
+            <span class="text-xs text-[#8B8B9B]">Valor (R$):</span>
+            <input
+              v-model.number="newProcedure.price"
+              type="number"
+              placeholder="0.00"
+              step="0.01"
+              class="w-full px-3 py-2 bg-[#18181E] border border-[#26262F] text-white rounded-lg outline-none focus:border-[#B597FF] text-sm"
+            />
           </div>
         </div>
-        <div class="flex gap-2">
-          <button @click="isCreating = false" class="flex-1 py-2 text-xs font-bold text-n-slate-10 hover:bg-n-alpha-1 rounded-lg">Cancelar</button>
-          <button @click="addProcedure" class="flex-1 py-2 text-xs font-bold bg-n-brand text-white rounded-lg">Adicionar</button>
+        <div class="flex items-center gap-3 pt-2">
+          <button @click="isCreating = false" class="text-[#8B8B9B] text-xs font-medium hover:text-white px-2">Cancelar</button>
+          <button @click="addProcedure" class="flex-1 py-2.5 text-sm font-semibold bg-[#B597FF] text-white rounded-lg hover:bg-[#9d7cf0] transition-colors">Adicionar</button>
         </div>
       </div>
 
-      <div class="space-y-2">
+      <div class="space-y-3">
         <div
           v-for="proc in procedures"
           :key="proc.id"
-          class="group flex items-center justify-between p-4 bg-n-slate-1 dark:bg-n-solid-3/50 hover:bg-white dark:hover:bg-n-solid-3 rounded-2xl border border-transparent hover:border-n-weak transition-all"
+          class="group flex flex-col p-4 bg-[#1F1F27] rounded-xl border border-[#26262F] hover:border-[#30303B] transition-colors"
         >
-          <div class="flex items-center gap-4">
-            <div class="size-10 rounded-xl bg-orange-100 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center">
-              <span class="i-lucide-activity size-5" />
-            </div>
-            <div>
-              <p class="font-bold text-n-slate-12 text-sm">{{ proc.name }}</p>
-              <div class="flex items-center gap-3 mt-0.5">
-                <div class="flex items-center gap-1.5">
-                  <span class="i-lucide-clock size-3 text-n-slate-8" />
-                  <span class="text-[10px] text-n-slate-9 font-bold">{{ proc.duration_minutes }} min</span>
-                </div>
-                <div class="flex items-center gap-1.5" v-if="proc.price !== null && proc.price !== undefined && proc.price !== ''">
-                  <span class="i-lucide-banknote size-3 text-n-slate-8" />
-                  <span class="text-[10px] text-green-600 dark:text-green-500 font-bold">{{ formatCurrency(proc.price) }}</span>
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-[#26262F] text-[#8B8B9B] flex items-center justify-center">
+                <span class="i-lucide-activity w-4 h-4" />
+              </div>
+              <div>
+                <p class="font-semibold text-white text-sm">{{ proc.name }}</p>
+                <div class="flex items-center gap-3 mt-1">
+                  <div class="flex items-center gap-1">
+                    <span class="i-lucide-clock w-3.5 h-3.5 text-[#8B8B9B]" />
+                    <span class="text-[11px] text-[#8B8B9B] font-medium">{{ proc.duration_minutes }} min</span>
+                  </div>
                 </div>
               </div>
             </div>
+            <button @click="deleteProcedure(proc.id)" class="opacity-0 group-hover:opacity-100 p-1.5 text-[#8B8B9B] hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all">
+              <span class="i-lucide-trash-2 w-4 h-4" />
+            </button>
           </div>
-          <button class="opacity-0 group-hover:opacity-100 p-2 text-n-slate-8 hover:text-n-brand transition-all">
-            <span class="i-lucide-edit size-4" />
-          </button>
         </div>
-      </div>
-
-      <div v-if="!procedures.length && !isCreating" class="py-12 text-center space-y-3">
-        <div class="size-12 bg-n-slate-3 dark:bg-n-solid-3 rounded-full flex items-center justify-center mx-auto grayscale opacity-50">
-          <span class="i-lucide-stethoscope size-6" />
-        </div>
-        <p class="text-sm text-n-slate-9">Nenhum procedimento cadastrado.</p>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #26262F;
+  border-radius: 4px;
+}
+</style>

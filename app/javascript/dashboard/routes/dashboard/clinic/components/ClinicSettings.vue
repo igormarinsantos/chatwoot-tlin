@@ -71,46 +71,46 @@ const testWebhook = async () => {
 </script>
 
 <template>
-  <div class="bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak dark:border-n-weak/50 overflow-hidden shadow-sm">
-    <header class="p-6 border-b border-n-weak dark:border-n-weak/50">
-      <h3 class="text-lg font-bold text-n-slate-12">Configurações da Clínica</h3>
-      <p class="text-xs text-n-slate-10 uppercase font-bold tracking-widest mt-1">Horários e Identidade</p>
+  <div class="bg-[#18181E] rounded-2xl flex flex-col h-full border border-[#26262F]">
+    <header class="p-6 border-b border-[#26262F]">
+      <h3 class="text-white font-semibold text-lg">Configurações da Clínica</h3>
+      <p class="text-[#8B8B9B] text-[10px] uppercase font-bold tracking-wider mt-0.5">Horários e Identidade</p>
     </header>
 
-    <div class="p-6 space-y-8">
+    <div class="p-6 space-y-8 flex-1 overflow-y-auto custom-scrollbar">
       <!-- Clinic Name -->
-      <div class="space-y-3">
-        <label class="text-sm font-bold text-n-slate-11">Nome da Clínica</label>
+      <div class="space-y-2">
+        <label class="text-xs font-semibold text-[#8B8B9B]">Nome da Clínica</label>
         <input
           v-model="localSettings.name"
-          class="w-full px-4 py-2 bg-n-slate-1 dark:bg-n-solid-3 border border-n-weak rounded-xl outline-none focus:border-n-brand text-sm"
+          class="w-full px-4 py-3 bg-[#111115] border border-[#26262F] text-white rounded-xl outline-none focus:border-[#B597FF] text-sm placeholder-[#6C6C7D]"
           placeholder="Ex: Clínica Tlin Dental"
         />
       </div>
 
       <!-- Operating Hours -->
       <div class="space-y-4">
-        <label class="text-sm font-bold text-n-slate-11">Horário de Funcionamento</label>
-        <div class="space-y-3">
-          <div v-for="day in days" :key="day.id" class="flex items-center justify-between p-3 rounded-2xl bg-n-slate-1 dark:bg-n-solid-3/50 border border-transparent hover:border-n-weak transition-all">
-            <span class="text-xs font-bold text-n-slate-12 w-28">{{ day.name }}</span>
+        <label class="text-xs font-semibold text-[#8B8B9B]">Horário de Funcionamento</label>
+        <div class="space-y-2">
+          <div v-for="day in days" :key="day.id" class="flex items-center justify-between p-3 rounded-xl bg-[#1F1F27] border border-[#26262F] hover:border-[#30303B] transition-colors">
+            <span class="text-xs font-semibold text-white w-28">{{ day.name }}</span>
             <div class="flex items-center gap-2">
               <input
                 v-model="localSettings.operating_hours[day.id].open"
                 type="time"
-                class="px-2 py-1 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg text-xs outline-none"
+                class="px-3 py-1.5 bg-[#111115] text-white border border-[#26262F] rounded-lg text-xs outline-none focus:border-[#B597FF]"
                 :disabled="!localSettings.operating_hours[day.id].open && localSettings.operating_hours[day.id].open !== ''"
               />
-              <span class="text-n-slate-8">até</span>
+              <span class="text-[#8B8B9B] text-xs">até</span>
               <input
                 v-model="localSettings.operating_hours[day.id].close"
                 type="time"
-                class="px-2 py-1 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg text-xs outline-none"
+                class="px-3 py-1.5 bg-[#111115] text-white border border-[#26262F] rounded-lg text-xs outline-none focus:border-[#B597FF]"
               />
               <button 
                 @click="localSettings.operating_hours[day.id].open = localSettings.operating_hours[day.id].open ? null : '08:00'"
-                class="ml-2 text-[10px] font-bold"
-                :class="localSettings.operating_hours[day.id].open ? 'text-red-500' : 'text-n-brand'"
+                class="ml-3 text-[10px] font-bold tracking-wider uppercase transition-colors"
+                :class="localSettings.operating_hours[day.id].open ? 'text-red-400 hover:text-red-300' : 'text-[#B597FF] hover:text-white'"
               >
                 {{ localSettings.operating_hours[day.id].open ? 'Fechar' : 'Abrir' }}
               </button>
@@ -119,51 +119,55 @@ const testWebhook = async () => {
         </div>
       </div>
 
-      <!-- Integraction & Webhooks -->
-      <div class="space-y-6 pt-8 border-t border-n-weak dark:border-n-weak/50">
+      <!-- Integrations & Webhooks -->
+      <div class="space-y-5 pt-8 border-t border-[#26262F]">
         <div>
-          <h4 class="text-sm font-bold text-n-slate-12 flex items-center gap-2">
-            <span class="i-lucide-webhook size-4 text-n-brand" />
+          <h4 class="text-sm font-semibold text-white flex items-center gap-2">
+            <span class="i-lucide-webhook w-4 h-4 text-[#B597FF]" />
             Integração & Webhooks
           </h4>
-          <p class="text-xs text-n-slate-10 mt-1">Configure como o sistema conversa com influenciadores externos.</p>
+          <p class="text-xs text-[#8B8B9B] mt-1">Configure como o sistema conversa com influenciadores externos.</p>
         </div>
 
-        <div class="p-4 bg-n-brand/5 rounded-2xl border border-n-brand/20 space-y-4">
+        <div class="p-5 bg-gradient-to-br from-[#B597FF]/5 to-transparent border border-[#B597FF]/20 rounded-xl space-y-4">
           <div class="space-y-2">
-            <label class="text-[10px] font-bold text-n-brand uppercase">Endpoints da API</label>
-            <div class="flex items-center gap-2">
-              <code class="flex-1 p-2 bg-white dark:bg-n-solid-2 rounded-lg text-[11px] font-medium border border-n-weak overflow-x-auto whitespace-nowrap">
-                POST http://localhost:4000/api/clinics/{{ settings?.id }}/holds
-              </code>
-              <button class="p-2 hover:bg-n-brand/10 rounded-lg text-n-brand transition-colors">
-                <span class="i-lucide-copy size-4" />
-              </button>
-            </div>
-          </div>
-
-          <div class="space-y-4">
-            <label class="text-[10px] font-bold text-n-brand uppercase">Webhook de Destino (n8n, etc)</label>
-            <div class="flex gap-2">
+            <label class="text-[10px] font-bold text-[#B597FF] uppercase tracking-wider">Webhook de Destino (n8n, etc)</label>
+            <div class="flex gap-3">
               <input
                 v-model="localSettings.webhook_url"
                 placeholder="https://sua-url-de-webhook.com/..."
-                class="flex-1 px-4 py-2 bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl outline-none focus:border-n-brand text-sm"
+                class="flex-1 px-4 py-2.5 bg-[#111115] border border-[#26262F] text-white rounded-lg outline-none focus:border-[#B597FF] text-sm placeholder-[#6C6C7D]"
               />
-              <button @click="testWebhook" class="px-4 py-2 bg-n-brand text-white text-xs font-bold rounded-xl whitespace-nowrap">Testar</button>
+              <button @click="testWebhook" class="px-5 py-2.5 bg-[#26262F] hover:bg-[#30303B] text-white text-xs font-semibold rounded-lg transition-colors border border-[#30303B] whitespace-nowrap">
+                Testar
+              </button>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="pt-4 border-t border-n-weak dark:border-n-weak/50">
-        <button
-          @click="saveSettings"
-          class="w-full py-3 bg-n-brand text-white font-bold rounded-2xl shadow-lg shadow-n-brand/20 hover:scale-[1.02] active:scale-95 transition-all"
-        >
-          Salvar Configurações
-        </button>
-      </div>
+    <!-- Footer Action -->
+    <div class="p-6 border-t border-[#26262F] bg-[#111115] rounded-b-2xl">
+      <button
+        @click="saveSettings"
+        class="w-full py-3 bg-[#B597FF] hover:bg-[#9d7cf0] text-white font-semibold rounded-xl transition-all shadow-lg shadow-[#B597FF]/10"
+      >
+        Salvar Configurações
+      </button>
     </div>
   </div>
 </template>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #26262F;
+  border-radius: 4px;
+}
+</style>

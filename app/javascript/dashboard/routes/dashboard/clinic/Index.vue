@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import ProfessionalManager from './components/ProfessionalManager.vue';
 import ProcedureManager from './components/ProcedureManager.vue';
@@ -7,7 +7,7 @@ import CalendarView from './components/CalendarView.vue';
 import ClinicSettings from './components/ClinicSettings.vue';
 
 const store = useStore();
-const activeTab = ref('agenda'); // agenda, management, settings
+const activeTab = ref('agenda');
 
 onMounted(() => {
   store.dispatch('clinicScheduler/fetchClinicSettings');
@@ -23,42 +23,44 @@ const tabs = [
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-n-slate-1 dark:bg-n-solid-1 overflow-hidden">
+  <div class="flex flex-col h-full bg-[#111115] text-white overflow-hidden">
     <!-- Header -->
-    <header class="p-6 border-b border-n-weak dark:border-n-weak/50 flex justify-between items-center bg-white dark:bg-n-solid-2">
+    <header class="pt-6 pb-4 px-8 border-b border-[#26262F] flex justify-between items-center bg-[#111115]">
       <div>
-        <h1 class="text-3xl font-bold text-n-slate-12 tracking-tight">Agenda Clínica</h1>
-        <p class="text-sm text-n-slate-10 mt-1">Gerencie profissionais, procedimentos e consultas.</p>
+        <h1 class="text-2xl font-bold tracking-tight text-white mb-1">Agenda Clínica</h1>
+        <p class="text-[11px] text-[#8B8B9B] font-medium tracking-wide">Gerencie profissionais, procedimentos e consultas.</p>
       </div>
 
-      <div class="flex bg-n-slate-3 dark:bg-n-solid-3 p-1 rounded-2xl">
+      <div class="flex bg-[#18181E] p-1.5 rounded-xl border border-[#26262F]">
         <button
           v-for="tab in tabs"
           :key="tab.id"
           @click="activeTab = tab.id"
-          class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+          class="px-5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2"
           :class="activeTab === tab.id 
-            ? 'bg-white dark:bg-n-solid-2 text-n-brand shadow-sm' 
-            : 'text-n-slate-10 hover:text-n-slate-12'"
+            ? 'bg-[#26262F] text-[#B597FF]' 
+            : 'text-[#8B8B9B] hover:text-white'"
         >
-          <span :class="tab.icon" class="size-4" />
+          <span :class="tab.icon" class="w-4 h-4" />
           {{ tab.name }}
         </button>
       </div>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-hidden">
-      <div v-if="activeTab === 'agenda'" class="h-full">
+    <main class="flex-1 overflow-hidden relative">
+      <div v-if="activeTab === 'agenda'" class="absolute inset-0">
         <CalendarView />
       </div>
 
-      <div v-else-if="activeTab === 'settings'" class="h-full overflow-y-auto p-8 max-w-4xl mx-auto">
-        <ClinicSettings />
+      <div v-else-if="activeTab === 'settings'" class="absolute inset-0 overflow-y-auto p-8 flex justify-center custom-scrollbar">
+        <div class="w-full max-w-3xl">
+          <ClinicSettings />
+        </div>
       </div>
 
-      <div v-else class="h-full overflow-y-auto p-8 space-y-12">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div v-else class="absolute inset-0 overflow-y-auto p-8 custom-scrollbar">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full max-h-[800px]">
           <ProfessionalManager />
           <ProcedureManager />
         </div>
@@ -68,15 +70,14 @@ const tabs = [
 </template>
 
 <style scoped>
-/* Custom Scrollbar for the main view */
-::-webkit-scrollbar {
+.custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
-::-webkit-scrollbar-track {
+.custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
-::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.1);
-  border-radius: 10px;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #26262F;
+  border-radius: 6px;
 }
 </style>
