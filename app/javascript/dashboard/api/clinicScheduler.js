@@ -80,6 +80,17 @@ export default {
     fireWebhook(clinicId, 'professional_created', newProf);
     return Promise.resolve({ data: newProf });
   },
+  updateProfessional(clinicId, payload) {
+    const data = getLocalData();
+    const profIndex = data.professionals.findIndex(p => p.id === payload.id);
+    if (profIndex !== -1) {
+      data.professionals[profIndex] = { ...data.professionals[profIndex], ...payload, clinic_id: clinicId };
+      saveLocalData(data);
+      fireWebhook(clinicId, 'professional_updated', data.professionals[profIndex]);
+      return Promise.resolve({ data: data.professionals[profIndex] });
+    }
+    return Promise.reject(new Error('Professional not found'));
+  },
   updateProfessionalProcedures(id, procedure_ids) {
     const data = getLocalData();
     const profIndex = data.professionals.findIndex(p => p.id === id);

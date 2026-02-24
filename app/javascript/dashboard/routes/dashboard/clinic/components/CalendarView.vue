@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
-import { DateTime } from 'luxon';
+import { DateTime, Info } from 'luxon';
 
 const store = useStore();
 const professionals = computed(() => store.getters['clinicScheduler/getProfessionals']);
@@ -9,6 +9,9 @@ const procedures_global = computed(() => store.getters['clinicScheduler/getProce
 const appointments = computed(() => store.getters['clinicScheduler/getAppointments']);
 const selectedProfessionalId = ref('all');
 const currentWeek = ref(DateTime.now().startOf('week'));
+
+const selectedAppointment = ref(null);
+const isViewingAppointment = ref(false);
 
 const isCreatingAppointment = ref(false);
 const newAppointment = ref({
@@ -40,7 +43,9 @@ const openAppointmentModal = (day, hour) => {
 };
 
 const saveAppointment = async () => {
+  // Logic to create hold + confirm
   try {
+    // Only ISO string is valid for JSON persistence
     const isoDate = DateTime.fromJSDate(newAppointment.value.start_datetime).toISO();
     
     const hold = await store.dispatch('clinicScheduler/createHold', {
@@ -63,6 +68,26 @@ const saveAppointment = async () => {
   }
 };
 
+const openViewModal = (appt, event) => {
+  event.stopPropagation();
+  selectedAppointment.value = appt;
+  isViewingAppointment.value = true;
+};
+
+const cancelAppointmentAction = async () => {
+  if (confirm('Deseja realmente cancelar este agendamento? Ele será excluído da sua agenda livre.')) {
+    try {
+      await store.dispatch('clinicScheduler/cancelAppointment', selectedAppointment.value.id);
+      isViewingAppointment.value = false;
+      // Note: cancel returns updated state, so local list might stay with status 'canceled'
+      // We should refetch to update UI accurately based on how the list is generated
+      store.dispatch('clinicScheduler/fetchAppointments');
+    } catch(e) {
+      alert('Erro: ' + e.message);
+    }
+  }
+};
+
 const days = computed(() => {
   return [0, 1, 2, 3, 4, 5, 6].map(i => currentWeek.value.plus({ days: i }));
 });
@@ -76,17 +101,17 @@ const procedures = computed(() => {
 });
 
 const professionalColors = [
-  { id: 'blue', classes: 'bg-[#1e3a8a] text-blue-300 border-blue-500', hex: '#3b82f6' },
-  { id: 'purple', classes: 'bg-[#4c1d95] text-purple-300 border-purple-500', hex: '#a855f7' },
-  { id: 'pink', classes: 'bg-[#831843] text-pink-300 border-pink-500', hex: '#ec4899' },
-  { id: 'orange', classes: 'bg-[#7c2d12] text-orange-300 border-orange-500', hex: '#f97316' },
-  { id: 'green', classes: 'bg-[#14532d] text-green-300 border-green-500', hex: '#22c55e' },
+  { id: 'blue', hex: '#3b82f6', bgHex: '#dbeafe', textHex: '#1e40af' },
+  { id: 'purple', hex: '#a855f7', bgHex: '#f3e8ff', textHex: '#6b21a8' },
+  { id: 'pink', hex: '#ec4899', bgHex: '#fce7f3', textHex: '#9d174d' },
+  { id: 'orange', hex: '#f97316', bgHex: '#ffedd5', textHex: '#c2410c' },
+  { id: 'green', hex: '#22c55e', bgHex: '#dcfce7', textHex: '#166534' },
 ];
 
 const getAppointmentColorClasses = (appt) => {
   const prof = professionals.value.find(p => p.id === appt.professional_id);
   const colorId = prof?.color || 'blue';
-  return professionalColors.find(c => c.id === colorId)?.classes || professionalColors[0].classes;
+  return professionalColors.find(c => c.id === colorId) || professionalColors[0];
 };
 
 const getProcedureDuration = (id) => {
@@ -99,14 +124,10 @@ const getProcedureName = (id) => {
   return proc ? proc.name : 'Procedimento';
 };
 
-const formatCurrency = (value) => {
-  if (value === null || value === undefined || value === '') return '';
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-};
-
 const getAppointmentsForDay = (day) => {
   return appointments.value.filter(a => {
     if (selectedProfessionalId.value !== 'all' && a.professional_id !== selectedProfessionalId.value) return false;
+    // ensure date parses properly
     const apptDate = DateTime.fromISO(a.start_datetime);
     return apptDate.isValid && apptDate.hasSame(day, 'day');
   });
@@ -119,13 +140,14 @@ const getAppointmentStyle = (appt) => {
   const hourOffset = start.hour - 8;
   const minuteOffset = start.minute / 60;
   
-  const top = (hourOffset + minuteOffset) * 80; // 80px per hour
+  const top = (hourOffset + minuteOffset) * 80;
+  
   const duration = getProcedureDuration(appt.procedure_id);
   const height = (duration / 60) * 80;
   
   return {
     top: `${Math.max(0, top)}px`,
-    height: `${Math.max(20, height)}px`
+    height: `${Math.max(20, height)}px` // minimum 20px height for visibility
   };
 };
 
@@ -135,34 +157,121 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-[#111115] relative overflow-hidden rounded-bl-xl rounded-br-xl">
-    
-    <!-- Header Controls -->
-    <div class="p-4 border-b border-[#26262F] flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <div class="flex items-center bg-[#18181E] rounded-lg border border-[#26262F] p-1">
-          <button @click="currentWeek = currentWeek.minus({ weeks: 1 })" class="p-1.5 hover:bg-[#26262F] rounded text-white transition-colors">
-            <span class="i-lucide-chevron-left w-4 h-4" />
+  <div class="flex flex-col h-full bg-white dark:bg-n-solid-1 relative">
+    <!-- Modal de Agendamento -->
+    <div v-if="isCreatingAppointment" class="absolute inset-0 z-[100] flex items-center justify-center p-6 bg-n-solid-1/50 backdrop-blur-sm">
+      <div class="bg-white dark:bg-n-solid-2 w-full max-w-lg rounded-3xl shadow-2xl border border-n-weak dark:border-n-weak/50 overflow-hidden animate-in fade-in zoom-in duration-300">
+        <header class="p-6 border-b border-n-weak dark:border-n-weak/50 flex justify-between items-center bg-n-slate-1 dark:bg-n-solid-3">
+          <h3 class="text-xl font-bold text-n-slate-12">Novo Agendamento</h3>
+          <button @click="isCreatingAppointment = false" class="p-2 hover:bg-n-weak rounded-xl transition-colors">
+            <span class="i-lucide-x size-5" />
           </button>
-          <div class="px-3 py-1 text-xs font-semibold text-white min-w-[120px] text-center">
+        </header>
+
+        <div class="p-8 space-y-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-n-slate-10 uppercase">Profissional</label>
+              <select v-model="newAppointment.professional_id" class="w-full p-3 bg-n-slate-1 dark:bg-n-solid-3 border border-n-weak rounded-xl text-sm outline-none">
+                <option v-for="prof in professionals" :key="prof.id" :value="prof.id">{{ prof.name }}</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-n-slate-10 uppercase">Procedimento</label>
+              <select v-model="newAppointment.procedure_id" class="w-full p-3 bg-n-slate-1 dark:bg-n-solid-3 border border-n-weak rounded-xl text-sm outline-none">
+                <option value="" disabled selected>Selecione...</option>
+                <option v-for="proc in procedures" :key="proc.id" :value="proc.id">{{ proc.name }} ({{ proc.duration_minutes }} min)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-n-slate-10 uppercase">Data e Hora</label>
+            <div class="p-3 bg-n-slate-3 dark:bg-n-solid-4 rounded-xl text-sm font-bold text-n-brand flex items-center gap-2">
+              <span class="i-lucide-calendar size-4" />
+              {{ DateTime.fromJSDate(newAppointment.start_datetime).toFormat('dd/MM/yyyy HH:mm') }}
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-n-slate-10 uppercase">Informações do Paciente</label>
+            <input v-model="newAppointment.patient_name" placeholder="Nome Completo" class="w-full p-3 bg-n-slate-1 dark:bg-n-solid-3 border border-n-weak rounded-xl text-sm outline-none" />
+            <input v-model="newAppointment.patient_phone" placeholder="Telefone (WhatsApp)" class="w-full p-3 bg-n-slate-1 dark:bg-n-solid-3 border border-n-weak rounded-xl text-sm outline-none" />
+          </div>
+
+          <div class="pt-4 flex gap-3">
+            <button @click="isCreatingAppointment = false" class="flex-1 py-3 text-sm font-bold text-n-slate-10 hover:bg-n-slate-1 rounded-2xl transition-colors">Cancelar</button>
+            <button @click="saveAppointment" class="flex-1 py-3 text-sm font-bold bg-n-brand text-white rounded-2xl shadow-lg shadow-n-brand/20">Confirmar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal View Appointment -->
+    <div v-if="isViewingAppointment" class="absolute inset-0 z-[100] flex items-center justify-center p-6 bg-n-solid-1/50 backdrop-blur-sm">
+      <div class="bg-white dark:bg-n-solid-2 w-full max-w-sm rounded-3xl shadow-2xl border border-n-weak dark:border-n-weak/50 overflow-hidden animate-in fade-in zoom-in duration-300">
+        <header class="p-6 border-b border-n-weak dark:border-n-weak/50 flex justify-between items-center bg-n-slate-1 dark:bg-n-solid-3">
+          <h3 class="text-lg font-bold text-n-slate-12">Detalhes da Consulta</h3>
+          <button @click="isViewingAppointment = false" class="p-2 hover:bg-n-weak rounded-xl transition-colors">
+            <span class="i-lucide-x size-5" />
+          </button>
+        </header>
+
+        <div class="p-8 space-y-4">
+          <div>
+            <p class="text-[10px] font-bold text-n-slate-9 uppercase tracking-widest mb-1">Paciente</p>
+            <p class="font-bold text-n-slate-12 text-lg">{{ selectedAppointment.patient_name || 'Agendamento em Hold' }}</p>
+            <p class="text-sm text-n-slate-10">{{ selectedAppointment.patient_phone || 'Sem Telefone' }}</p>
+          </div>
+          
+          <div class="py-4 border-y border-n-weak dark:border-n-weak/50 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-n-slate-10 uppercase">Data</span>
+              <span class="text-sm font-medium text-n-slate-12">{{ DateTime.fromISO(selectedAppointment.start_datetime).toFormat('dd/MM/yyyy HH:mm') }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-n-slate-10 uppercase">Procedimento</span>
+              <span class="text-sm font-medium text-n-slate-12">{{ getProcedureName(selectedAppointment.procedure_id) }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-n-slate-10 uppercase">Status</span>
+              <span class="text-xs font-bold uppercase" :class="selectedAppointment.status === 'confirmed' ? 'text-green-500' : 'text-amber-500'">{{ selectedAppointment.status === 'confirmed' ? 'Confirmado' : 'Hold' }}</span>
+            </div>
+          </div>
+
+          <div class="pt-4 flex gap-3">
+            <button @click="cancelAppointmentAction" class="w-full py-3 text-sm font-bold bg-red-500/10 text-red-600 hover:bg-red-500/20 rounded-2xl transition-colors">Cancelar Agendamento</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar Header -->
+    <div class="p-4 border-b border-n-weak dark:border-n-weak/50 flex items-center justify-between bg-n-slate-1 dark:bg-n-solid-2">
+      <div class="flex items-center gap-4">
+        <div class="flex bg-white dark:bg-n-solid-3 p-1 rounded-xl shadow-sm border border-n-weak dark:border-n-weak/50">
+          <button @click="currentWeek = currentWeek.minus({ weeks: 1 })" class="p-2 hover:bg-n-slate-1 dark:hover:bg-n-solid-3 rounded-lg">
+            <span class="i-lucide-chevron-left size-4" />
+          </button>
+          <div class="px-4 py-2 text-sm font-bold text-n-slate-12">
             {{ currentWeek.toFormat('MMMM yyyy') }}
           </div>
-          <button @click="currentWeek = currentWeek.plus({ weeks: 1 })" class="p-1.5 hover:bg-[#26262F] rounded text-white transition-colors">
-            <span class="i-lucide-chevron-right w-4 h-4" />
+          <button @click="currentWeek = currentWeek.plus({ weeks: 1 })" class="p-2 hover:bg-n-slate-1 dark:hover:bg-n-solid-3 rounded-lg">
+            <span class="i-lucide-chevron-right size-4" />
           </button>
         </div>
-        <button @click="currentWeek = DateTime.now().startOf('week')" class="text-xs font-bold text-[#B597FF] hover:underline">
+        <button @click="currentWeek = DateTime.now().startOf('week')" class="text-xs font-bold text-n-brand px-3 py-2 hover:bg-n-brand/5 rounded-lg transition-colors">
           Hoje
         </button>
       </div>
 
-      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[50%]">
+      <div class="flex items-center gap-2 overflow-x-auto max-w-md no-scrollbar">
         <button
           @click="selectProfessional('all')"
-          class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all"
+          class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border"
           :class="selectedProfessionalId === 'all' 
-            ? 'bg-[#B597FF] text-white' 
-            : 'bg-[#18181E] text-[#8B8B9B] border border-[#26262F] hover:text-white'"
+            ? 'bg-n-brand text-white border-n-brand shadow-lg shadow-n-brand/20' 
+            : 'bg-white dark:bg-n-solid-3 text-n-slate-10 border-n-weak dark:border-n-weak/50 hover:border-n-brand/50'"
         >
           Todos
         </button>
@@ -170,14 +279,15 @@ onMounted(() => {
           v-for="prof in professionals"
           :key="prof.id"
           @click="selectProfessional(prof.id)"
-          class="px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-2 border"
+          class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border flex items-center gap-2"
           :class="selectedProfessionalId === prof.id 
-            ? 'bg-[#1F1F27] text-white border-[#26262F]' 
-            : 'bg-[#111115] text-[#8B8B9B] border-transparent hover:text-white'"
+            ? 'bg-n-brand text-white border-n-brand shadow-lg shadow-n-brand/20' 
+            : 'bg-white dark:bg-n-solid-3 text-n-slate-10 border-n-weak dark:border-n-weak/50 hover:border-n-brand/50'"
         >
           <span 
-            class="w-2 h-2 rounded-full" 
-            :style="{ backgroundColor: professionalColors.find(c => c.id === (prof.color || 'blue'))?.hex }"
+            class="size-2 rounded-full" 
+            :class="`bg-${prof.color || 'blue'}-500`" 
+            :style="`background-color: ${prof.color === 'purple' ? '#a855f7' : prof.color === 'pink' ? '#ec4899' : prof.color === 'orange' ? '#f97316' : prof.color === 'green' ? '#22c55e' : '#3b82f6'}`"
           />
           {{ prof.name }}
         </button>
@@ -185,96 +295,68 @@ onMounted(() => {
     </div>
 
     <!-- Calendar Grid -->
-    <div class="flex-1 overflow-y-auto overflow-x-auto custom-scrollbar relative bg-[#111115]">
+    <div class="flex-1 overflow-y-auto overflow-x-auto relative">
       <div class="min-w-[800px] flex h-full">
-        <!-- Time Axis -->
-        <div class="w-16 border-r border-[#26262F] bg-[#111115] sticky left-0 z-20">
-          <div class="h-16 border-b border-[#26262F]"></div>
-          <div v-for="hour in hours" :key="hour" class="h-[80px] text-[10px] font-medium text-[#6C6C7D] text-center pt-2">
+        <!-- Time Column -->
+        <div class="w-20 border-r border-n-weak dark:border-n-weak/50 bg-n-slate-1 dark:bg-n-solid-2 sticky left-0 z-20">
+          <div class="h-16 border-b border-n-weak dark:border-n-weak/50"></div>
+          <div v-for="hour in hours" :key="hour" class="h-20 text-[10px] font-bold text-n-slate-8 text-center p-2">
             {{ hour }}:00
           </div>
         </div>
 
         <!-- Days Columns -->
-        <div v-for="day in days" :key="day.toISODate()" class="flex-1 min-w-[120px] border-r border-[#26262F] relative group">
+        <div v-for="day in days" :key="day.toISODate()" class="flex-1 min-w-[120px] border-r border-n-weak dark:border-n-weak/50 group">
           <!-- Day Header -->
           <div 
-            class="h-16 border-b border-[#26262F] p-2 flex flex-col items-center justify-center sticky top-0 bg-[#111115] z-10"
+            class="h-16 border-b border-n-weak dark:border-n-weak/50 p-3 flex flex-col items-center justify-center sticky top-0 bg-white dark:bg-n-solid-1 z-10"
+            :class="{ 'bg-n-brand/5': day.hasSame(DateTime.now(), 'day') }"
           >
-            <span class="text-[10px] font-bold text-[#8B8B9B] uppercase tracking-wider mb-1">{{ day.weekdayShort }}</span>
-            <span class="text-sm font-bold" :class="day.hasSame(DateTime.now(), 'day') ? 'text-[#B597FF]' : 'text-white'">{{ day.day }}</span>
+            <span class="text-[10px] font-bold text-n-slate-9 uppercase tracking-widest">{{ day.weekdayShort }}</span>
+            <span class="text-lg font-bold" :class="day.hasSame(DateTime.now(), 'day') ? 'text-n-brand' : 'text-n-slate-12'">{{ day.day }}</span>
           </div>
 
-          <!-- Slots -->
-          <div class="relative h-[1120px]">
+          <!-- Time Slots -->
+          <div class="relative h-[1120px]"> <!-- 14 hours * 80px -->
             <div 
               v-for="hour in hours" 
               :key="hour" 
               @click="openAppointmentModal(day, hour)"
-              class="h-[80px] border-b border-[#26262F] hover:bg-[#18181E] transition-colors cursor-crosshair"
-            ></div>
+              class="h-20 border-b border-n-weak/30 dark:border-n-weak/10 relative hover:bg-n-slate-1 dark:hover:bg-n-alpha-2 transition-colors cursor-crosshair group/slot"
+            >
+              <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/slot:opacity-100 transition-opacity">
+                <span class="i-lucide-plus-circle size-6 text-n-brand/50" />
+              </div>
+            </div>
 
-            <!-- Appointments -->
+            <!-- Actual Dynamic Data -->
             <div 
               v-for="appt in getAppointmentsForDay(day)"
               :key="appt.id"
-              class="absolute left-1 right-2 rounded-md p-2 shadow-lg overflow-hidden border-l-4 opacity-95 hover:opacity-100 transition-opacity"
-              :class="getAppointmentColorClasses(appt)"
-              :style="getAppointmentStyle(appt)"
+              v-show="appt.status !== 'canceled'"
+              @click="openViewModal(appt, $event)"
+              class="absolute left-1 right-1 rounded-lg p-2 shadow-sm animate-in fade-in zoom-in duration-300 overflow-hidden cursor-pointer hover:brightness-95 transition-all outline outline-1 outline-black/10"
+              :style="{
+                backgroundColor: getAppointmentColorClasses(appt).bgHex,
+                borderLeft: `4px solid ${getAppointmentColorClasses(appt).hex}`,
+                color: getAppointmentColorClasses(appt).textHex,
+                ...getAppointmentStyle(appt)
+              }"
             >
-              <div v-if="appt.status === 'confirmed'" class="h-full flex flex-col justify-start">
-                <p class="text-[8px] font-bold uppercase tracking-wider opacity-75 mb-0.5">Confirmado</p>
-                <p class="font-bold text-xs leading-tight truncate text-white">{{ appt.patient_name }}</p>
-                <p v-if="getProcedureDuration(appt.procedure_id) >= 30" class="text-[10px] opacity-90 truncate mt-1 text-gray-200">
-                  {{ getProcedureName(appt.procedure_id) }}
-                </p>
+              <div v-if="appt.status === 'confirmed'" class="h-full flex flex-col justify-between">
+                <div>
+                  <p class="text-[9px] font-bold uppercase leading-none mb-0.5 opacity-80">Confirmado</p>
+                  <p class="font-bold text-[11px] leading-tight truncate">{{ appt.patient_name }}</p>
+                </div>
+                <!-- Only show proc if height allows -->
+                <p v-if="getProcedureDuration(appt.procedure_id) >= 30" class="text-[9px] font-medium opacity-80 truncate">{{ getProcedureName(appt.procedure_id) }}</p>
+              </div>
+
+              <div v-else class="h-full opacity-60">
+                <p class="text-[9px] font-bold uppercase leading-none mb-0.5 opacity-80">Hold</p>
+                <p class="font-bold text-[11px] leading-tight truncate">Bloqueado</p>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Creation Modal -->
-    <div v-if="isCreatingAppointment" class="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div class="bg-[#18181E] border border-[#26262F] w-full max-w-md rounded-2xl shadow-2xl overflow-hidden shadow-[#B597FF]/10">
-        <div class="p-5 border-b border-[#26262F] flex justify-between items-center">
-          <h3 class="text-white font-semibold">Novo Agendamento</h3>
-          <button @click="isCreatingAppointment = false" class="text-[#8B8B9B] hover:text-white transition-colors">
-            <span class="i-lucide-x w-5 h-5" />
-          </button>
-        </div>
-        <div class="p-5 space-y-4">
-          <div class="space-y-1.5">
-            <label class="text-xs text-[#8B8B9B]">Profissional</label>
-            <select v-model="newAppointment.professional_id" class="w-full px-3 py-2.5 bg-[#111115] border border-[#26262F] rounded-lg text-white font-medium text-sm outline-none focus:border-[#B597FF]">
-              <option v-for="prof in professionals" :key="prof.id" :value="prof.id">{{ prof.name }}</option>
-            </select>
-          </div>
-          <div class="space-y-1.5">
-            <label class="text-xs text-[#8B8B9B]">Procedimento</label>
-            <select v-model="newAppointment.procedure_id" class="w-full px-3 py-2.5 bg-[#111115] border border-[#26262F] rounded-lg text-white font-medium text-sm outline-none focus:border-[#B597FF]">
-              <option value="" disabled selected>Selecione...</option>
-              <option v-for="proc in procedures" :key="proc.id" :value="proc.id">
-                {{ proc.name }} ({{ proc.duration_minutes }} min) {{ formatCurrency(proc.price) ? ' - ' + formatCurrency(proc.price) : '' }}
-              </option>
-            </select>
-          </div>
-          
-          <div class="grid grid-cols-2 gap-3 pt-2 border-t border-[#26262F]">
-            <div class="space-y-1.5">
-              <label class="text-xs text-[#8B8B9B]">Nome do Paciente</label>
-              <input v-model="newAppointment.patient_name" class="w-full px-3 py-2 bg-[#111115] border border-[#26262F] rounded-lg text-white text-sm outline-none focus:border-[#B597FF]" />
-            </div>
-            <div class="space-y-1.5">
-              <label class="text-xs text-[#8B8B9B]">Telefone (WhatsApp)</label>
-              <input v-model="newAppointment.patient_phone" class="w-full px-3 py-2 bg-[#111115] border border-[#26262F] rounded-lg text-white text-sm outline-none focus:border-[#B597FF]" />
-            </div>
-          </div>
-
-          <div class="flex items-center gap-3 pt-4">
-            <button @click="isCreatingAppointment = false" class="text-[#8B8B9B] hover:text-white px-4 py-2 text-sm font-medium">Cancelar</button>
-            <button @click="saveAppointment" class="flex-1 bg-[#B597FF] hover:bg-[#9d7cf0] text-white py-2.5 rounded-lg text-sm font-semibold transition-colors">Confirmar</button>
           </div>
         </div>
       </div>
@@ -283,17 +365,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #26262F;
-  border-radius: 6px;
-}
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
