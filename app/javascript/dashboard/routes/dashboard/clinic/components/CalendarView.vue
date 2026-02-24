@@ -17,7 +17,8 @@ const isCreatingAppointment = ref(false);
 const newAppointment = ref({
   professional_id: null,
   procedure_id: null,
-  start_datetime: null,
+  start_date: '',
+  start_time: '',
   patient_name: '',
   patient_phone: '',
 });
@@ -26,7 +27,7 @@ const selectProfessional = (id) => {
   selectedProfessionalId.value = id;
 };
 
-const openAppointmentModal = (day, hour) => {
+const openAppointmentModal = (day, hour, minute = 0) => {
   let prof_id = selectedProfessionalId.value;
   if (prof_id === 'all') {
     prof_id = professionals.value.length > 0 ? professionals.value[0].id : null;
@@ -35,18 +36,49 @@ const openAppointmentModal = (day, hour) => {
   newAppointment.value = {
     professional_id: prof_id,
     procedure_id: null,
-    start_datetime: day.set({ hour, minute: 0 }).toJSDate(),
+    start_date: day.toISODate(),
+    start_time: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
     patient_name: '',
     patient_phone: '',
   };
   isCreatingAppointment.value = true;
 };
 
+const conflictCheck = () => {
+  if (!newAppointment.value.procedure_id || !newAppointment.value.professional_id) return false;
+  
+  const startObj = DateTime.fromISO(`${newAppointment.value.start_date}T${newAppointment.value.start_time}`);
+  if (!startObj.isValid) return true;
+
+  const duration = getProcedureDuration(newAppointment.value.procedure_id);
+  const endObj = startObj.plus({ minutes: duration });
+
+  const profAppts = appointments.value.filter(a => 
+    a.professional_id === newAppointment.value.professional_id && a.status !== 'canceled'
+  );
+
+  for (const appt of profAppts) {
+    const existingStart = DateTime.fromISO(appt.start_datetime);
+    if (!existingStart.isValid) continue;
+    
+    const existingDuration = getProcedureDuration(appt.procedure_id);
+    const existingEnd = existingStart.plus({ minutes: existingDuration });
+
+    if (startObj < existingEnd && endObj > existingStart) {
+      return true;
+    }
+  }
+  return false;
+};
+
 const saveAppointment = async () => {
-  // Logic to create hold + confirm
+  if (conflictCheck()) {
+    alert('Erro: O profissional já possui um agendamento conflitante neste horário. Por favor, escolha outro horário ou profissional.');
+    return;
+  }
+
   try {
-    // Only ISO string is valid for JSON persistence
-    const isoDate = DateTime.fromJSDate(newAppointment.value.start_datetime).toISO();
+    const isoDate = DateTime.fromISO(`${newAppointment.value.start_date}T${newAppointment.value.start_time}`).toISO();
     
     const hold = await store.dispatch('clinicScheduler/createHold', {
       professional_id: newAppointment.value.professional_id,
@@ -187,9 +219,9 @@ onMounted(() => {
 
           <div class="space-y-2">
             <label class="text-xs font-bold text-n-slate-10 uppercase">Data e Hora</label>
-            <div class="p-3 bg-n-slate-3 dark:bg-n-solid-4 rounded-xl text-sm font-bold text-n-brand flex items-center gap-2">
-              <span class="i-lucide-calendar size-4" />
-              {{ DateTime.fromJSDate(newAppointment.start_datetime).toFormat('dd/MM/yyyy HH:mm') }}
+            <div class="flex gap-2">
+              <input type="date" v-model="newAppointment.start_date" class="flex-1 p-3 bg-n-slate-3 dark:bg-n-solid-4 border border-n-weak rounded-xl text-sm outline-none font-bold text-n-brand" />
+              <input type="time" v-model="newAppointment.start_time" class="w-1/3 p-3 bg-n-slate-3 dark:bg-n-solid-4 border border-n-weak rounded-xl text-sm outline-none font-bold text-n-brand" />
             </div>
           </div>
 
@@ -249,14 +281,21 @@ onMounted(() => {
     <!-- Calendar Header -->
     <div class="p-4 border-b border-n-weak dark:border-n-weak/50 flex items-center justify-between bg-n-slate-1 dark:bg-n-solid-2">
       <div class="flex items-center gap-4">
-        <div class="flex bg-white dark:bg-n-solid-3 p-1 rounded-xl shadow-sm border border-n-weak dark:border-n-weak/50">
-          <button @click="currentWeek = currentWeek.minus({ weeks: 1 })" class="p-2 hover:bg-n-slate-1 dark:hover:bg-n-solid-3 rounded-lg">
+        <div class="flex bg-white dark:bg-n-solid-3 p-1 rounded-xl shadow-sm border border-n-weak dark:border-n-weak/50 relative">
+          <button @click="currentWeek = currentWeek.minus({ weeks: 1 })" class="p-2 hover:bg-n-slate-1 dark:hover:bg-n-solid-3 rounded-lg z-10">
             <span class="i-lucide-chevron-left size-4" />
           </button>
-          <div class="px-4 py-2 text-sm font-bold text-n-slate-12">
-            {{ currentWeek.toFormat('MMMM yyyy') }}
+          
+          <div class="relative flex items-center justify-center px-4 overflow-hidden group">
+            <span class="text-sm font-bold text-n-slate-12 pointer-events-none group-hover:text-n-brand transition-colors">{{ currentWeek.toFormat('MMMM yyyy') }}</span>
+            <input 
+              type="date" 
+              class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              @change="(e) => { if(e.target.value) currentWeek = DateTime.fromISO(e.target.value).startOf('week') }"
+            />
           </div>
-          <button @click="currentWeek = currentWeek.plus({ weeks: 1 })" class="p-2 hover:bg-n-slate-1 dark:hover:bg-n-solid-3 rounded-lg">
+
+          <button @click="currentWeek = currentWeek.plus({ weeks: 1 })" class="p-2 hover:bg-n-slate-1 dark:hover:bg-n-solid-3 rounded-lg z-10">
             <span class="i-lucide-chevron-right size-4" />
           </button>
         </div>
@@ -321,11 +360,12 @@ onMounted(() => {
             <div 
               v-for="hour in hours" 
               :key="hour" 
-              @click="openAppointmentModal(day, hour)"
-              class="h-20 border-b border-n-weak/30 dark:border-n-weak/10 relative hover:bg-n-slate-1 dark:hover:bg-n-alpha-2 transition-colors cursor-crosshair group/slot"
+              class="h-20 border-b border-n-weak/30 dark:border-n-weak/10 relative group/slot flex flex-col"
             >
-              <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/slot:opacity-100 transition-opacity">
-                <span class="i-lucide-plus-circle size-6 text-n-brand/50" />
+              <div @click="openAppointmentModal(day, hour, 0)" class="flex-1 hover:bg-n-slate-1 dark:hover:bg-n-alpha-2 cursor-crosshair transition-colors flex items-center justify-center relative">
+                <span class="i-lucide-plus-circle size-4 text-n-brand/50 opacity-0 group-hover/slot:opacity-100 absolute" />
+              </div>
+              <div @click="openAppointmentModal(day, hour, 30)" class="flex-1 hover:bg-n-slate-1 dark:hover:bg-n-alpha-2 cursor-crosshair transition-colors border-t border-dashed border-n-weak/20 flex items-center justify-center relative">
               </div>
             </div>
 
