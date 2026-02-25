@@ -9,9 +9,18 @@ const newProcedure = ref({ name: '', duration_minutes: 30, price: 0 });
 
 const addProcedure = async () => {
   if (!newProcedure.value.name.trim()) return;
-  await store.dispatch('clinicScheduler/createProcedure', { ...newProcedure.value });
+  if (newProcedure.value.id) {
+    await store.dispatch('clinicScheduler/updateProcedure', { ...newProcedure.value });
+  } else {
+    await store.dispatch('clinicScheduler/createProcedure', { ...newProcedure.value });
+  }
   newProcedure.value = { name: '', duration_minutes: 30, price: 0 };
   isCreating.value = false;
+};
+
+const editProcedure = (proc) => {
+  newProcedure.value = { ...proc };
+  isCreating.value = true;
 };
 </script>
 
@@ -59,8 +68,8 @@ const addProcedure = async () => {
           </div>
         </div>
         <div class="flex gap-2">
-          <button @click="isCreating = false" class="flex-1 py-2 text-xs font-bold text-n-slate-10 hover:bg-n-alpha-1 rounded-lg">Cancelar</button>
-          <button @click="addProcedure" class="flex-1 py-2 text-xs font-bold bg-n-brand text-white rounded-lg">Adicionar</button>
+          <button @click="isCreating = false; newProcedure = { name: '', duration_minutes: 30, price: 0 }" class="flex-1 py-2 text-xs font-bold text-n-slate-10 hover:bg-n-alpha-1 rounded-lg">Cancelar</button>
+          <button @click="addProcedure" class="flex-1 py-2 text-xs font-bold bg-n-brand text-white rounded-lg">{{ newProcedure.id ? 'Salvar' : 'Adicionar' }}</button>
         </div>
       </div>
 
@@ -88,7 +97,7 @@ const addProcedure = async () => {
               </div>
             </div>
           </div>
-          <button class="opacity-0 group-hover:opacity-100 p-2 text-n-slate-8 hover:text-n-brand transition-all">
+          <button @click="editProcedure(proc)" class="opacity-0 group-hover:opacity-100 p-2 text-n-slate-8 hover:text-n-brand transition-all">
             <span class="i-lucide-edit size-4" />
           </button>
         </div>

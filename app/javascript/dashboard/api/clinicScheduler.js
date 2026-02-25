@@ -149,6 +149,18 @@ export default {
     fireWebhook(clinicId, 'procedure_created', newProc);
     return Promise.resolve({ data: newProc });
   },
+  updateProcedure(clinicId, payload) {
+    const data = getLocalData();
+    const procIndex = data.procedures.findIndex(p => p.id === payload.id);
+    if (procIndex !== -1) {
+      const updatedProc = { ...data.procedures[procIndex], ...payload, clinic_id: clinicId };
+      data.procedures[procIndex] = updatedProc;
+      saveLocalData(data);
+      fireWebhook(clinicId, 'procedure_updated', updatedProc);
+      return Promise.resolve({ data: updatedProc });
+    }
+    return Promise.reject(new Error('Procedure not found'));
+  },
   deleteProcedure(id) {
     const data = getLocalData();
     const proc = data.procedures.find(p => p.id === id);
@@ -175,10 +187,8 @@ export default {
     };
     data.appointments.push(hold);
     saveLocalData(data);
-    // Don't fire webhook for hold, wait for confirm
-    return Promise.resolve({ data: hold }); // Return .data as the vuex action dispatch returns hold.data or hold depending on how it's handled. CalendarView uses hold.id directly from the payload? Let's check vuex.
-    // wait, vuex does: const hold = await store.dispatch('clinicScheduler/createHold', ...); hold.id.
-    // Wait, the action `createHold` isn't in clinicScheduler.js store? Let's fix that.
+    fireWebhook(clinicId, 'appointment_created', hold);
+    return Promise.resolve({ data: hold });
   },
   confirmAppointment(clinicId, holdId, payload) {
     const data = getLocalData();

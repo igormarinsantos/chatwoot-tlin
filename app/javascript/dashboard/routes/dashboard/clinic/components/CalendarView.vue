@@ -360,7 +360,7 @@ const getAppointmentStyle = (appt, col) => {
   const top = (hourOffset + minuteOffset) * 80;
   
   const duration = getProcedureDuration(appt.procedure_id);
-  const height = Math.max((duration / 60) * 80, 20); // enforce min height visual
+  const height = Math.max((duration / 60) * 80, 36); // enforce min height visual of 36px so text doesn't vanish
   
   let leftOffset = '4px';
   let zIndex = 10;
@@ -576,22 +576,11 @@ onMounted(() => {
             <div 
               v-for="hour in hours" 
               :key="hour" 
-              class="h-20 shrink-0 border-b border-n-weak/30 dark:border-n-weak/10 relative flex flex-col group/slot"
+              @click="!isSlotDisabled(col.professional_id, hour, 0) && openAppointmentModal(col.day, hour, 0)"
+              class="h-20 shrink-0 border-b border-n-weak/30 dark:border-n-weak/10 relative flex flex-col group/slot transition-colors cursor-crosshair items-center justify-center hover:bg-black/5 dark:hover:bg-white/5"
+              :class="getSlotClass(col.professional_id, hour, 0)"
             >
-              <div 
-                @click="!isSlotDisabled(col.professional_id, hour, 0) && openAppointmentModal(col.day, hour, 0)" 
-                class="flex-1 transition-colors flex items-center justify-center relative" 
-                :class="getSlotClass(col.professional_id, hour, 0)"
-              >
-                <span v-if="!isSlotDisabled(col.professional_id, hour, 0)" class="i-lucide-plus-circle size-4 text-n-brand/50 opacity-0 group-hover/slot:opacity-100 absolute" />
-              </div>
-              
-              <div 
-                @click="!isSlotDisabled(col.professional_id, hour, 30) && openAppointmentModal(col.day, hour, 30)" 
-                class="flex-1 transition-colors border-t border-dashed border-n-weak/20 flex items-center justify-center relative" 
-                :class="getSlotClass(col.professional_id, hour, 30)"
-              >
-              </div>
+              <span v-if="!isSlotDisabled(col.professional_id, hour, 0)" class="i-lucide-plus-circle size-5 text-n-brand/50 opacity-0 group-hover/slot:opacity-100 pointer-events-none transition-all scale-75 group-hover/slot:scale-100" />
             </div>
 
             <!-- Actual Dynamic Data -->
@@ -607,15 +596,18 @@ onMounted(() => {
                 ...getAppointmentStyle(appt, col)
               }"
             >
-              <div v-if="appt.status === 'confirmed'" class="h-full flex flex-col overflow-hidden">
-                <p class="text-[8px] font-bold uppercase truncate opacity-80 mb-0.5">Confirmado - {{ appt.patient_name }}</p>
-                <p class="text-[9px] font-bold truncate">{{ getProcedureName(appt.procedure_id) }}</p>
-                <p v-if="getProcedureDuration(appt.procedure_id) > 20" class="text-[8px] font-medium opacity-80 truncate mt-max">{{ DateTime.fromISO(appt.start_datetime).toFormat('HH:mm') }} - {{ getProcedureDuration(appt.procedure_id) }} min</p>
+              <div v-if="appt.status === 'confirmed'" class="h-full flex flex-col overflow-hidden leading-tight">
+                <div class="flex items-center justify-between opacity-80 mb-0.5">
+                  <span class="text-[8px] font-bold uppercase tracking-widest truncate">Confirmado</span>
+                  <span class="text-[8px] font-bold hidden md:block">{{ DateTime.fromISO(appt.start_datetime).toFormat('HH:mm') }}</span>
+                </div>
+                <p class="text-[10px] font-bold truncate">{{ appt.patient_name }}</p>
+                <p v-if="getProcedureDuration(appt.procedure_id) >= 20" class="text-[9px] font-medium opacity-80 truncate">{{ getProcedureName(appt.procedure_id) }}</p>
               </div>
 
-              <div v-else class="h-full opacity-60 flex flex-col overflow-hidden">
-                <p class="text-[8px] font-bold uppercase truncate opacity-80 mb-0.5">Hold</p>
-                <p class="text-[9px] font-bold truncate">Bloqueado</p>
+              <div v-else class="h-full opacity-60 flex flex-col overflow-hidden leading-tight">
+                <p class="text-[8px] font-bold uppercase tracking-widest truncate opacity-80 mb-0.5">Hold</p>
+                <p class="text-[10px] font-bold truncate">Bloqueado</p>
               </div>
             </div>
           </div>

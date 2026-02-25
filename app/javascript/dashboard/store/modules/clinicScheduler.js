@@ -67,6 +67,14 @@ const actions = {
       commit('SET_UI_FLAG', { isCreating: false });
     }
   },
+  updateProfessional: async ({ dispatch, state }, data) => {
+    try {
+      await ClinicSchedulerAPI.updateProfessional(state.activeClinicId, data);
+      dispatch('fetchProfessionals');
+    } catch (error) {
+      console.error('Error updating professional:', error);
+    }
+  },
   updateProfessionalProcedures: async ({ dispatch }, { id, procedure_ids }) => {
     try {
       await ClinicSchedulerAPI.updateProfessionalProcedures(id, procedure_ids);
@@ -89,6 +97,14 @@ const actions = {
       commit('ADD_PROCEDURE', response.data);
     } catch (error) {
       console.error('Error creating procedure:', error);
+    }
+  },
+  updateProcedure: async ({ dispatch, state }, data) => {
+    try {
+      await ClinicSchedulerAPI.updateProcedure(state.activeClinicId, data);
+      dispatch('fetchProcedures');
+    } catch (error) {
+      console.error('Error updating procedure:', error);
     }
   },
   deleteProcedure: async ({ dispatch }, id) => {
