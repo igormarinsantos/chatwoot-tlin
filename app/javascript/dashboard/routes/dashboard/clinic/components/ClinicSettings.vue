@@ -137,40 +137,89 @@ const testWebhook = async () => {
         </div>
       </div>
 
-      <!-- Integraction & Webhooks -->
+      <!-- Integration & Webhooks -->
       <div class="space-y-6 pt-8 border-t border-n-weak dark:border-n-weak/50">
-        <div>
-          <h4 class="text-sm font-bold text-n-slate-12 flex items-center gap-2">
-            <span class="i-lucide-webhook size-4 text-n-brand" />
-            Integração & Webhooks
-          </h4>
-          <p class="text-xs text-n-slate-10 mt-1">Configure como o sistema conversa com influenciadores externos.</p>
+        <div class="flex items-center justify-between">
+          <div>
+            <h4 class="text-sm font-bold text-n-slate-12 flex items-center gap-2">
+              <span class="i-lucide-webhook size-4 text-n-brand" />
+              Integração via Webhooks (n8n/Make)
+            </h4>
+            <p class="text-[11px] font-medium text-n-slate-10 mt-1 max-w-xl">
+              Configure URLs para receber notificações em tempo real. Cada evento disparado envia um JSON para o seu fluxo de automação, permitindo enviar mensagens no WhatsApp, e-mails ou integração com CRM.
+            </p>
+          </div>
         </div>
 
-        <div class="p-4 bg-n-brand/5 rounded-2xl border border-n-brand/20 space-y-4">
-          <div class="space-y-2">
-            <label class="text-[10px] font-bold text-n-brand uppercase">Endpoints da API</label>
-            <div class="flex items-center gap-2">
-              <code class="flex-1 p-2 bg-white dark:bg-n-solid-2 rounded-lg text-[11px] font-medium border border-n-weak overflow-x-auto whitespace-nowrap">
-                POST http://localhost:4000/api/clinics/{{ settings?.id }}/holds
-              </code>
-              <button class="p-2 hover:bg-n-brand/10 rounded-lg text-n-brand transition-colors">
-                <span class="i-lucide-copy size-4" />
-              </button>
-            </div>
-          </div>
-
-          <div class="space-y-4">
-            <label class="text-[10px] font-bold text-n-brand uppercase">Webhook de Destino (n8n, etc)</label>
+        <div class="grid md:grid-cols-2 gap-4">
+          <!-- Webhook Settings -->
+          <div class="space-y-4 p-5 bg-n-slate-1 dark:bg-n-solid-3 rounded-2xl border border-n-weak">
+            <label class="text-xs font-bold text-n-slate-11 uppercase flex items-center gap-2">
+              <span class="i-lucide-link size-4" />
+              URL Base do Webhook (Recebimento)
+            </label>
             <div class="flex gap-2">
               <input
                 v-model="localSettings.webhook_url"
-                placeholder="https://sua-url-de-webhook.com/..."
-                class="flex-1 px-4 py-2 bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl outline-none focus:border-n-brand text-sm"
+                placeholder="https://sua-url-n8n.com/webhook/..."
+                class="flex-1 px-4 py-2.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl outline-none focus:border-n-brand text-sm shadow-sm"
               />
-              <button @click="testWebhook" class="px-4 py-2 bg-n-brand text-white text-xs font-bold rounded-xl whitespace-nowrap">Testar</button>
+              <button @click="testWebhook" class="px-4 py-2.5 bg-n-brand/10 text-n-brand text-xs font-bold rounded-xl whitespace-nowrap hover:bg-n-brand/20 transition-colors">Testar</button>
+            </div>
+            <p class="text-[10px] text-n-slate-9 italic">Todos os eventos da tabela ao lado serão enviados para esta URL via método POST.</p>
+          </div>
+
+          <!-- Documentation / API Endpoints -->
+          <div class="space-y-4 p-5 bg-n-brand/5 rounded-2xl border border-n-brand/20 relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 size-24 bg-n-brand/10 rounded-full blur-2xl"></div>
+            <label class="text-xs font-bold text-n-brand uppercase flex items-center gap-2 relative z-10">
+              <span class="i-lucide-code size-4" />
+              API Endpoints (Envio)
+            </label>
+            <p class="text-[10px] text-n-slate-11/80 relative z-10">
+              Para automatizar a <strong>criação</strong> de agendamentos vindos do WhatsApp (n8n), envie um POST para a URL abaixo com payload JSON.
+            </p>
+            <div class="flex items-center gap-2 relative z-10">
+              <code class="flex-1 p-2 bg-white dark:bg-n-solid-2 shadow-sm rounded-lg text-[10px] font-mono text-n-brand border border-n-brand/20 overflow-x-auto whitespace-nowrap select-all cursor-text">
+                POST http://localhost:4000/api/clinics/{{ settings?.id || '1' }}/holds
+              </code>
             </div>
           </div>
+        </div>
+
+        <!-- Events List -->
+        <div class="mt-4 border border-n-weak rounded-2xl overflow-hidden text-sm relative">
+           <table class="w-full text-left">
+             <thead class="bg-n-slate-1/50 dark:bg-n-solid-3/50 text-xs font-bold text-n-slate-10 uppercase">
+               <tr>
+                 <th class="px-4 py-3 border-b border-n-weak">Nome do Evento (event)</th>
+                 <th class="px-4 py-3 border-b border-n-weak">Disparado Quando</th>
+                 <th class="px-4 py-3 border-b border-n-weak">Status</th>
+               </tr>
+             </thead>
+             <tbody class="divide-y divide-n-weak text-[11px] font-medium text-n-slate-11">
+               <tr class="hover:bg-n-slate-1 dark:hover:bg-n-solid-3/30 transition-colors">
+                 <td class="px-4 py-3 font-mono text-n-brand">appointment_created</td>
+                 <td class="px-4 py-3">Iniciado agendamento via sistema ou paciente (Hold).</td>
+                 <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-md font-bold">Ativo</span></td>
+               </tr>
+               <tr class="hover:bg-n-slate-1 dark:hover:bg-n-solid-3/30 transition-colors">
+                 <td class="px-4 py-3 font-mono text-n-brand">appointment_confirmed</td>
+                 <td class="px-4 py-3">Agendamento possui todos os dados firmes.</td>
+                 <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-md font-bold">Ativo</span></td>
+               </tr>
+               <tr class="hover:bg-n-slate-1 dark:hover:bg-n-solid-3/30 transition-colors">
+                 <td class="px-4 py-3 font-mono text-n-brand">appointment_updated</td>
+                 <td class="px-4 py-3">Horário reagendado, status alterado em painel, etc.</td>
+                 <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-md font-bold">Ativo</span></td>
+               </tr>
+               <tr class="hover:bg-n-slate-1 dark:hover:bg-n-solid-3/30 transition-colors">
+                 <td class="px-4 py-3 font-mono text-n-brand">appointment_cancelled</td>
+                 <td class="px-4 py-3">Horário cancelado e liberado da agenda.</td>
+                 <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-md font-bold">Ativo</span></td>
+               </tr>
+             </tbody>
+           </table>
         </div>
       </div>
 

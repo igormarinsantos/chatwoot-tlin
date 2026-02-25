@@ -17,6 +17,16 @@ const isViewingAppointment = ref(false);
 const isModalOpen = ref(false);
 const modalMode = ref('create'); // 'create' or 'edit'
 
+const hoverIndicator = ref({ colId: null, top: 0, timeLabel: '' });
+
+const appointmentStatuses = [
+  { id: 'scheduled', name: 'Agendado', bg: 'bg-blue-500/10', text: 'text-blue-500', dot: 'bg-blue-500' },
+  { id: 'confirmed', name: 'Confirmado', bg: 'bg-green-500/10', text: 'text-green-500', dot: 'bg-green-500' },
+  { id: 'waiting', name: 'Aguardando', bg: 'bg-amber-500/10', text: 'text-amber-500', dot: 'bg-amber-500' },
+  { id: 'in_progress', name: 'Em Atend.', bg: 'bg-purple-500/10', text: 'text-purple-500', dot: 'bg-purple-500' },
+  { id: 'finished', name: 'Finalizado', bg: 'bg-slate-500/10', text: 'text-slate-500', dot: 'bg-slate-500' },
+];
+
 const appointmentForm = ref({
   id: null,
   professional_id: null,
@@ -67,10 +77,56 @@ const openEditModal = () => {
   isModalOpen.value = true;
 };
 
+const updateAppointmentStatus = async (statusId) => {
+  if (!selectedAppointment.value) return;
+  try {
+    await store.dispatch('clinicScheduler/updateAppointment', {
+      appointmentId: selectedAppointment.value.id,
+      data: { status: statusId }
+    });
+    selectedAppointment.value.status = statusId;
+  } catch (err) {
+    alert('Erro ao atualizar status: ' + err.message);
+  }
+};
+
 const parseTimeToFloat = (timeString) => {
   if (!timeString) return -1;
   const [h, m] = timeString.split(':').map(Number);
   return h + (m / 60);
+};
+
+const onColumnMouseMove = (e, col) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const y = e.clientY - rect.top;
+  const exactHourOffset = y / 80; 
+  const totalMinutes = exactHourOffset * 60;
+  const snappedMinutes = Math.max(0, Math.floor(totalMinutes / 15) * 15);
+  
+  if (snappedMinutes >= 16 * 60) return; // out of bounds (16 hours)
+
+  const hour = Math.floor(snappedMinutes / 60) + 8;
+  const minute = snappedMinutes % 60;
+  
+  hoverIndicator.value = {
+    colId: col.id,
+    top: (snappedMinutes / 60) * 80,
+    timeLabel: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
+    hour, minute
+  };
+};
+
+const onColumnMouseLeave = () => {
+  hoverIndicator.value = { colId: null, top: 0, timeLabel: '' };
+};
+
+const onColumnClick = (e, col) => {
+  if (hoverIndicator.value.colId === col.id) {
+    // Check disabled
+    if (!isSlotDisabled(col.professional_id, hoverIndicator.value.hour, hoverIndicator.value.minute)) {
+      openAppointmentModal(col.day, hoverIndicator.value.hour, hoverIndicator.value.minute);
+    }
+  }
 };
 
 const isSlotDisabled = (profId, hour, minute) => {
@@ -91,7 +147,6 @@ const isSlotDisabled = (profId, hour, minute) => {
 
 const getSlotClass = (profId, hour, minute) => {
   if (isSlotDisabled(profId, hour, minute)) {
-    // Determine if it's break or out of shift for different styling
     const prof = professionals.value.find(p => p.id === profId);
     if (!prof || !prof.working_hours) return 'bg-n-slate-2/50 dark:bg-n-solid-3/50 cursor-not-allowed opacity-50 relative overflow-hidden repeating-linear-bg';
     
@@ -100,11 +155,11 @@ const getSlotClass = (profId, hour, minute) => {
     const breakEndNum = parseTimeToFloat(prof.working_hours.break_end);
     
     if (breakStartNum >= 0 && breakEndNum >= 0 && timeNum >= breakStartNum && timeNum < breakEndNum) {
-      return 'bg-amber-500/5 cursor-not-allowed opacity-60'; // visually distinguish lunch
+      return 'bg-amber-500/5 opacity-60 pointer-events-none'; 
     }
-    return 'bg-n-slate-2/50 dark:bg-n-solid-3/50 cursor-not-allowed opacity-50';
+    return 'bg-n-slate-2/50 dark:bg-n-solid-3/50 opacity-50 pointer-events-none';
   }
-  return 'hover:bg-n-slate-1 dark:hover:bg-n-alpha-2 cursor-crosshair';
+  return '';
 };
 
 const conflictCheck = () => {
@@ -474,9 +529,20 @@ onMounted(() => {
               <span class="text-xs font-bold text-n-slate-10 uppercase">Procedimento</span>
               <span class="text-sm font-medium text-n-slate-12">{{ getProcedureName(selectedAppointment.procedure_id) }}</span>
             </div>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between pt-2">
               <span class="text-xs font-bold text-n-slate-10 uppercase">Status</span>
-              <span class="text-xs font-bold uppercase" :class="selectedAppointment.status === 'confirmed' ? 'text-green-500' : 'text-amber-500'">{{ selectedAppointment.status === 'confirmed' ? 'Confirmado' : 'Hold' }}</span>
+              
+              <div class="relative group mt-1">
+                <select 
+                  :value="selectedAppointment.status"
+                  @change="updateAppointmentStatus($event.target.value)"
+                  class="appearance-none bg-n-slate-2 dark:bg-n-solid-3 border border-n-weak rounded-xl px-3 py-1.5 text-xs font-bold text-n-slate-12 outline-none cursor-pointer pr-8"
+                >
+                  <option v-for="st in appointmentStatuses" :key="st.id" :value="st.id">{{ st.name }}</option>
+                  <option value="hold" disabled>Em Reserva</option>
+                </select>
+                <span class="i-lucide-chevron-down size-3 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-n-slate-8" />
+              </div>
             </div>
           </div>
 
@@ -571,16 +637,32 @@ onMounted(() => {
             <span class="text-sm font-bold" :class="col.day.hasSame(DateTime.now(), 'day') ? 'text-n-brand' : 'text-n-slate-12'">{{ col.subLabel }}</span>
           </div>
 
-          <!-- Time Slots -->
-          <div class="relative" :style="{ height: `${hours.length * 80}px` }">
+          <!-- Time Slots Container (Interactive) -->
+          <div 
+            class="relative cursor-crosshair" 
+            :style="{ height: `${hours.length * 80}px` }"
+            @mousemove="onColumnMouseMove($event, col)"
+            @mouseleave="onColumnMouseLeave"
+            @click="onColumnClick($event, col)"
+          >
+            <!-- Background Hours Grid -->
+            <div class="absolute inset-0 pointer-events-none">
+              <div 
+                v-for="hour in hours" 
+                :key="hour" 
+                class="h-20 shrink-0 border-b border-n-weak/30 dark:border-n-weak/10 relative flex flex-col"
+                :class="getSlotClass(col.professional_id, hour, 0)"
+              >
+              </div>
+            </div>
+
+            <!-- Hover Indicator -->
             <div 
-              v-for="hour in hours" 
-              :key="hour" 
-              @click="!isSlotDisabled(col.professional_id, hour, 0) && openAppointmentModal(col.day, hour, 0)"
-              class="h-20 shrink-0 border-b border-n-weak/30 dark:border-n-weak/10 relative flex flex-col group/slot transition-colors cursor-crosshair items-center justify-center hover:bg-black/5 dark:hover:bg-white/5"
-              :class="getSlotClass(col.professional_id, hour, 0)"
+              v-if="hoverIndicator.colId === col.id" 
+              class="absolute left-0 right-0 h-10 border border-n-brand/40 bg-n-brand/10 z-20 pointer-events-none flex items-center px-1 animate-in fade-in"
+              :style="{ top: `${hoverIndicator.top}px` }"
             >
-              <span v-if="!isSlotDisabled(col.professional_id, hour, 0)" class="i-lucide-plus-circle size-5 text-n-brand/50 opacity-0 group-hover/slot:opacity-100 pointer-events-none transition-all scale-75 group-hover/slot:scale-100" />
+              <div class="text-[9px] font-bold text-n-brand bg-white dark:bg-n-solid-1 px-1 rounded shadow-sm opacity-80">{{ hoverIndicator.timeLabel }}</div>
             </div>
 
             <!-- Actual Dynamic Data -->
@@ -596,18 +678,23 @@ onMounted(() => {
                 ...getAppointmentStyle(appt, col)
               }"
             >
-              <div v-if="appt.status === 'confirmed'" class="h-full flex flex-col overflow-hidden leading-tight">
-                <div class="flex items-center justify-between opacity-80 mb-0.5">
-                  <span class="text-[8px] font-bold uppercase tracking-widest truncate">Confirmado</span>
-                  <span class="text-[8px] font-bold hidden md:block">{{ DateTime.fromISO(appt.start_datetime).toFormat('HH:mm') }}</span>
+              <div v-if="appt.status !== 'hold'" class="h-full flex flex-col overflow-hidden leading-tight justify-between">
+                <div>
+                  <div class="flex items-center justify-between opacity-80 mb-0.5">
+                    <span class="text-[8px] font-bold uppercase tracking-widest truncate">{{ appointmentStatuses.find(s => s.id === appt.status)?.name || 'Confirmado' }}</span>
+                    <span class="text-[8px] font-bold hidden md:block">{{ DateTime.fromISO(appt.start_datetime).toFormat('HH:mm') }}</span>
+                  </div>
+                  <p class="text-[10px] font-bold truncate leading-tight">{{ appt.patient_name }}</p>
+                  <p v-if="getProcedureDuration(appt.procedure_id) >= 20" class="text-[8px] font-medium opacity-80 truncate">{{ appt.patient_phone }}</p>
                 </div>
-                <p class="text-[10px] font-bold truncate">{{ appt.patient_name }}</p>
-                <p v-if="getProcedureDuration(appt.procedure_id) >= 20" class="text-[9px] font-medium opacity-80 truncate">{{ getProcedureName(appt.procedure_id) }}</p>
+                <!-- Status Bar Indicator -->
+                <div class="w-full flex">
+                   <div v-if="getProcedureDuration(appt.procedure_id) >= 30" class="text-[9px] font-bold opacity-80 truncate">{{ getProcedureName(appt.procedure_id) }}</div>
+                </div>
               </div>
 
-              <div v-else class="h-full opacity-60 flex flex-col overflow-hidden leading-tight">
-                <p class="text-[8px] font-bold uppercase tracking-widest truncate opacity-80 mb-0.5">Hold</p>
-                <p class="text-[10px] font-bold truncate">Bloqueado</p>
+              <div v-else class="h-full opacity-60 flex flex-col overflow-hidden leading-tight justify-center">
+                <p class="text-[10px] font-bold uppercase tracking-widest truncate opacity-80 text-center">Reservando...</p>
               </div>
             </div>
           </div>
