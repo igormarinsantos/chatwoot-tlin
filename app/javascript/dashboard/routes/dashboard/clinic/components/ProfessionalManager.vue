@@ -12,6 +12,7 @@ const newProfessional = ref({
   name: '', 
   color: 'blue', 
   procedure_ids: [],
+  average_consultation_time: 30,
 });
 
 // For availability blocks management
@@ -48,6 +49,7 @@ const addProfessional = async () => {
     name: '', 
     color: 'blue', 
     procedure_ids: [],
+    average_consultation_time: 30,
   };
   currentBlocks.value = [];
   isCreating.value = false;
@@ -59,6 +61,7 @@ const editProfessional = (prof) => {
     name: prof.name, 
     color: prof.color || 'blue', 
     procedure_ids: prof.procedures?.map(p => p.id) || [],
+    average_consultation_time: prof.average_consultation_time || 30,
   };
   
   const blocksForProf = availabilityBlocks.value.filter(b => b.entity_type === 'professional' && b.entity_id === prof.id);
@@ -117,7 +120,7 @@ const toggleProcedure = (prof, procId) => {
       </div>
       <button
         @click="() => { 
-          newProfessional = { id: null, name: '', color: 'blue', procedure_ids: [] }; 
+          newProfessional = { id: null, name: '', color: 'blue', procedure_ids: [], average_consultation_time: 30 }; 
           currentBlocks = [
             { id: Date.now().toString(), day_of_week: 'all', start_time: '08:00', end_time: '18:00', block_type: 'working_hours' },
             { id: (Date.now()+1).toString(), day_of_week: 'all', start_time: '12:00', end_time: '13:00', block_type: 'break' }
@@ -138,6 +141,17 @@ const toggleProcedure = (prof, procId) => {
           placeholder="Nome do profissional..."
           class="w-full px-4 py-2 bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl outline-none focus:border-n-brand focus:ring-1 focus:ring-n-brand text-sm"
         />
+
+        <div class="space-y-2">
+          <p class="text-xs font-bold text-n-slate-10">Tempo Médio de Consulta (Minutos):</p>
+          <input
+            v-model.number="newProfessional.average_consultation_time"
+            type="number"
+            min="5"
+            step="5"
+            class="w-full px-4 py-2 bg-white dark:bg-n-solid-2 border border-n-weak rounded-xl outline-none focus:border-n-brand focus:ring-1 focus:ring-n-brand text-sm"
+          />
+        </div>
 
         <div class="space-y-2">
           <p class="text-xs font-bold text-n-slate-10">Cor de Identificação:</p>

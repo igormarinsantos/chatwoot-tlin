@@ -24,8 +24,11 @@ module Api
                 professional_id: entity_type == 'professional' ? entity_id : nil,
                 resource_id: entity_type == 'resource' ? entity_id : nil,
                 block_type: b[:block_type] || b[:type],
-                start_at: b[:start_time] || b[:start_at],
-                end_at: b[:end_time] || b[:end_at],
+                day_of_week: b[:day_of_week],
+                start_time: b[:start_time],
+                end_time: b[:end_time],
+                start_at: b[:start_at].presence, # Nullable for recurrences
+                end_at: b[:end_at].presence,
                 created_at: Time.current,
                 updated_at: Time.current
               }
@@ -62,7 +65,7 @@ module Api
         private
 
         def block_params
-          params.require(:availability_block).permit(:professional_id, :resource_id, :block_type, :start_at, :end_at)
+          params.require(:availability_block).permit(:professional_id, :resource_id, :block_type, :day_of_week, :start_time, :end_time, :start_at, :end_at)
         end
       end
     end

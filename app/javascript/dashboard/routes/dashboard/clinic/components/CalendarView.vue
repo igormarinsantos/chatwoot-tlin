@@ -213,7 +213,8 @@ const conflictCheck = () => {
   const startObj = DateTime.fromISO(`${appointmentForm.value.start_date}T${appointmentForm.value.start_time}`);
   if (!startObj.isValid) return true;
 
-  const duration = getProcedureDuration(appointmentForm.value.procedure_id);
+  const prof = professionals.value.find(p => p.id === appointmentForm.value.professional_id);
+  const duration = prof?.average_consultation_time || 30;
   const endObj = startObj.plus({ minutes: duration });
   
   const timeNumStart = startObj.hour + (startObj.minute / 60);
@@ -321,7 +322,8 @@ const saveAppointment = async () => {
 
   try {
     const startObj = DateTime.fromISO(`${appointmentForm.value.start_date}T${appointmentForm.value.start_time}`);
-    const duration = getProcedureDuration(appointmentForm.value.procedure_id);
+    const prof = professionals.value.find(p => p.id === appointmentForm.value.professional_id);
+    const duration = prof?.average_consultation_time || 30;
     const endObj = startObj.plus({ minutes: duration });
     
     const isoDateStart = startObj.toISO();

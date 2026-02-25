@@ -34,35 +34,15 @@ const firstName = computed(() => currentUser.value?.name?.split(' ')[0] || '');
 
 const stats = computed(() => {
   const unreadCount = notifications.value.filter(n => !n.readAt).length;
-  const todayAppointments = contacts.value.filter(c => {
-    const date = c.customAttributes?.appointment_at;
-    return date && isToday(new Date(date));
-  }).length;
 
   return [
     { label: 'Conversas Ativas', value: unreadCount, icon: 'i-lucide-message-circle', color: 'text-n-blue-9', bg: 'bg-n-blue-9/10' },
-    { label: 'Compromissos Hoje', value: todayAppointments, icon: 'i-lucide-calendar', color: 'text-n-brand', bg: 'bg-n-brand/10' },
     { label: 'Novos Leads', value: contacts.value.length, icon: 'i-lucide-user-plus', color: 'text-n-iris-9', bg: 'bg-n-iris-9/10' },
   ];
 });
 
 const recentNotifications = computed(() => {
   return notifications.value.slice(0, 5);
-});
-
-const todayEvents = computed(() => {
-  return contacts.value
-    .filter(c => {
-      const date = c.customAttributes?.appointment_at;
-      return date && isToday(new Date(date));
-    })
-    .map(c => ({
-      id: c.id,
-      name: c.name,
-      time: format(new Date(c.customAttributes.appointment_at), 'HH:mm'),
-      type: c.customAttributes?.is_agenda_event ? 'evento' : 'consulta'
-    }))
-    .sort((a, b) => a.time.localeCompare(b.time));
 });
 
 const openConversation = (notification) => {
@@ -73,7 +53,6 @@ const openConversation = (notification) => {
   });
 };
 
-const goToAgenda = () => router.push({ name: 'agenda_view' });
 const goToContacts = () => router.push({ name: 'contacts_dashboard_index' });
 </script>
 
@@ -155,43 +134,6 @@ const goToContacts = () => router.push({ name: 'contacts_dashboard_index' });
               <span class="i-lucide-user-plus size-5 text-n-brand group-hover:text-white" />
               <span class="font-bold text-sm md:text-base">Novo Lead</span>
             </button>
-            <button 
-              @click="goToAgenda"
-              class="flex items-center justify-center lg:justify-start gap-3 p-3 md:p-4 bg-n-slate-1 dark:bg-n-solid-3 rounded-2xl hover:bg-n-brand hover:text-white transition-all group"
-            >
-              <span class="i-lucide-calendar-plus size-5 text-n-brand group-hover:text-white" />
-              <span class="font-bold text-sm md:text-base">Agendar</span>
-            </button>
-          </div>
-        </section>
-
-        <!-- Today's Agenda -->
-        <section class="bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak overflow-hidden shadow-sm flex-1">
-          <header class="p-5 md:p-6 border-b border-n-weak flex items-center justify-between bg-n-slate-1/50 dark:bg-n-solid-3/50">
-            <h2 class="text-lg md:text-xl font-bold text-n-slate-12 flex items-center gap-2">
-              <span class="i-lucide-calendar-days size-5 text-n-brand" />
-              Hoje
-            </h2>
-            <button @click="goToAgenda" class="text-xs font-bold text-n-brand hover:underline">Ver agenda</button>
-          </header>
-          <div class="p-5 md:p-6 space-y-6">
-            <div v-if="todayEvents.length === 0" class="flex flex-col items-center justify-center py-6 md:py-8 text-n-slate-9 gap-3">
-              <span class="i-lucide-calendar-x size-8 md:size-10 opacity-20" />
-              <p class="text-sm font-medium">Nada planejado para hoje.</p>
-            </div>
-            <div v-else class="space-y-4">
-              <div 
-                v-for="event in todayEvents" 
-                :key="event.id"
-                class="flex gap-4 items-start group"
-              >
-                <div class="w-12 text-sm font-bold text-n-brand pt-1">{{ event.time }}</div>
-                <div class="flex-1 min-w-0">
-                  <div class="font-bold text-n-slate-12 truncate group-hover:text-n-brand transition-colors text-sm md:text-base">{{ event.name }}</div>
-                  <div class="text-[9px] md:text-[10px] uppercase font-black tracking-tighter text-n-slate-9 mt-0.5">{{ event.type }}</div>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
       </div>

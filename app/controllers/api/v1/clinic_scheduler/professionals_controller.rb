@@ -33,7 +33,7 @@ module Api
         private
 
         def professional_params
-          params.require(:professional).permit(:name, :active, working_hours: {}, buffers_default: {})
+          params.require(:professional).permit(:name, :active, :average_consultation_time, :procedure_ids => [], working_hours: {}, buffers_default: {})
         end
       end
     end
