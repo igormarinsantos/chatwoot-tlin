@@ -335,8 +335,26 @@ const menuItems = computed(() => {
       name: 'Clinic',
       label: t('SIDEBAR.CLINICA'),
       icon: 'i-lucide-activity',
-      to: accountScopedRoute('clinic_dashboard'),
-      activeOn: ['clinic_dashboard'],
+      children: [
+        {
+          name: 'Agenda',
+          label: 'Agenda',
+          activeOn: ['clinic_dashboard'],
+          to: accountScopedRoute('clinic_dashboard'),
+        },
+        {
+          name: 'Settings',
+          label: 'Configurações',
+          activeOn: ['clinic_dashboard_settings'],
+          to: accountScopedRoute('clinic_dashboard_settings'),
+        },
+        {
+          name: 'Finance',
+          label: 'Financeiro',
+          activeOn: ['clinic_dashboard_finance'],
+          to: accountScopedRoute('clinic_dashboard_finance'),
+        }
+      ]
     },
     {
       name: 'Captain',

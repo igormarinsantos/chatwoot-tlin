@@ -1,13 +1,20 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useStore } from 'vuex';
+import { useRoute } from 'vue-router';
 import ProfessionalManager from './components/ProfessionalManager.vue';
 import ProcedureManager from './components/ProcedureManager.vue';
 import CalendarView from './components/CalendarView.vue';
 import ClinicSettings from './components/ClinicSettings.vue';
 
 const store = useStore();
-const activeTab = ref('agenda'); // agenda, management, settings
+const route = useRoute();
+
+const activeTab = computed(() => {
+  if (route.name === 'clinic_dashboard_settings') return 'settings';
+  if (route.name === 'clinic_dashboard_finance') return 'finance';
+  return 'agenda';
+});
 
 onMounted(() => {
   store.dispatch('clinicScheduler/fetchClinicSettings');
@@ -15,10 +22,6 @@ onMounted(() => {
   store.dispatch('clinicScheduler/fetchProcedures');
 });
 
-const tabs = [
-  { id: 'agenda', name: 'Agenda', icon: 'i-lucide-calendar' },
-  { id: 'settings', name: 'Configurações', icon: 'i-lucide-settings' },
-];
 </script>
 
 <template>
@@ -26,23 +29,12 @@ const tabs = [
     <!-- Header -->
     <header class="p-6 border-b border-n-weak dark:border-n-weak/50 flex justify-between items-center bg-white dark:bg-n-solid-2">
       <div>
-        <h1 class="text-3xl font-bold text-n-slate-12 tracking-tight">Agenda Clínica</h1>
-        <p class="text-sm text-n-slate-10 mt-1">Gerencie profissionais, procedimentos e consultas.</p>
-      </div>
-
-      <div class="flex bg-n-slate-3 dark:bg-n-solid-3 p-1 rounded-2xl">
-        <button
-          v-for="tab in tabs"
-          :key="tab.id"
-          @click="activeTab = tab.id"
-          class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
-          :class="activeTab === tab.id 
-            ? 'bg-white dark:bg-n-solid-2 text-n-brand shadow-sm' 
-            : 'text-n-slate-10 hover:text-n-slate-12'"
-        >
-          <span :class="tab.icon" class="size-4" />
-          {{ tab.name }}
-        </button>
+        <h1 class="text-3xl font-bold text-n-slate-12 tracking-tight">
+          {{ activeTab === 'settings' ? 'Configurações da Clínica' : activeTab === 'finance' ? 'Financeiro da Clínica' : 'Agenda Clínica' }}
+        </h1>
+        <p class="text-sm text-n-slate-10 mt-1">
+          {{ activeTab === 'settings' ? 'Gerencie procedimentos, profissionais e horários operacionais.' : activeTab === 'finance' ? 'Gestão de contas e recebimentos (Em Breve).' : 'Gerencie agendas e consultas de todos os profissionais.' }}
+        </p>
       </div>
     </header>
 

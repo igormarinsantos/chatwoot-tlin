@@ -307,12 +307,13 @@ const currentDateLabel = computed(() => {
   return currentDate.value.toFormat('dd MMM yyyy');
 });
 
-const hours = Array.from({ length: 14 }, (_, i) => i + 8); // 8:00 to 21:00
+const hours = Array.from({ length: 16 }, (_, i) => i + 8); // 8:00 to 23:00
 
 const procedures = computed(() => {
   if (!appointmentForm.value.professional_id) return [];
   const prof = professionals.value.find(p => p.id === appointmentForm.value.professional_id);
-  return prof ? (prof.procedures || []) : [];
+  if (!prof || !prof.procedure_ids) return [];
+  return procedures_global.value.filter(proc => prof.procedure_ids.includes(proc.id));
 });
 
 const professionalColors = [
@@ -359,7 +360,7 @@ const getAppointmentStyle = (appt, col) => {
   const top = (hourOffset + minuteOffset) * 80;
   
   const duration = getProcedureDuration(appt.procedure_id);
-  const height = (duration / 60) * 80;
+  const height = Math.max((duration / 60) * 80, 20); // enforce min height visual
   
   let leftOffset = '4px';
   let zIndex = 10;
@@ -549,18 +550,18 @@ onMounted(() => {
     </div>
 
     <!-- Calendar Grid -->
-    <div class="flex-1 overflow-y-auto overflow-x-auto relative">
-      <div class="min-w-[800px] flex h-full">
+    <div class="flex-1 overflow-y-auto overflow-x-auto relative min-h-0 bg-n-slate-1 dark:bg-n-solid-2">
+      <div class="min-w-fit flex h-full">
         <!-- Time Column -->
-        <div class="w-20 border-r border-n-weak dark:border-n-weak/50 bg-n-slate-1 dark:bg-n-solid-2 sticky left-0 z-20">
-          <div class="h-16 border-b border-n-weak dark:border-n-weak/50"></div>
-          <div v-for="hour in hours" :key="hour" class="h-20 text-[10px] font-bold text-n-slate-8 text-center p-2">
+        <div class="w-14 md:w-16 shrink-0 border-r border-n-weak dark:border-n-weak/50 bg-n-slate-1 dark:bg-n-solid-2 sticky left-0 z-20 flex flex-col">
+          <div class="h-16 shrink-0 border-b border-n-weak dark:border-n-weak/50"></div>
+          <div v-for="hour in hours" :key="hour" class="h-20 shrink-0 text-[10px] md:text-xs font-bold text-n-slate-8 text-center p-2 relative flex justify-center">
             {{ hour }}:00
           </div>
         </div>
 
         <!-- Columns -->
-        <div v-for="col in columns" :key="col.id" class="flex-1 min-w-[200px] border-r border-n-weak dark:border-n-weak/50 group">
+        <div v-for="col in columns" :key="col.id" class="flex-1 min-w-[200px] md:min-w-[250px] border-r border-n-weak dark:border-n-weak/50 group bg-white dark:bg-n-solid-1">
           <!-- Column Header -->
           <div 
             class="h-16 border-b border-n-weak dark:border-n-weak/50 p-2 flex flex-col items-center justify-center sticky top-0 bg-white dark:bg-n-solid-1 z-10"
@@ -571,11 +572,11 @@ onMounted(() => {
           </div>
 
           <!-- Time Slots -->
-          <div class="relative h-[1120px]"> <!-- 14 hours * 80px -->
+          <div class="relative" :style="{ height: `${hours.length * 80}px` }">
             <div 
               v-for="hour in hours" 
               :key="hour" 
-              class="h-20 border-b border-n-weak/30 dark:border-n-weak/10 relative flex flex-col group/slot"
+              class="h-20 shrink-0 border-b border-n-weak/30 dark:border-n-weak/10 relative flex flex-col group/slot"
             >
               <div 
                 @click="!isSlotDisabled(col.professional_id, hour, 0) && openAppointmentModal(col.day, hour, 0)" 
@@ -598,26 +599,23 @@ onMounted(() => {
               v-for="appt in getAppointmentsForColumn(col)"
               :key="appt.id"
               @click="openViewModal(appt, $event)"
-              class="absolute rounded-lg p-2 shadow-sm animate-in fade-in zoom-in duration-300 overflow-hidden cursor-pointer hover:brightness-95 transition-all outline outline-1 outline-black/10"
+              class="absolute rounded-lg p-1.5 shadow-sm animate-in fade-in zoom-in duration-300 overflow-hidden cursor-pointer hover:brightness-95 transition-all outline outline-1 outline-black/10 flex flex-col gap-0.5 leading-none"
               :style="{
                 backgroundColor: getAppointmentColorClasses(appt).bgHex,
-                borderLeft: `4px solid ${getAppointmentColorClasses(appt).hex}`,
+                borderLeft: `3px solid ${getAppointmentColorClasses(appt).hex}`,
                 color: getAppointmentColorClasses(appt).textHex,
                 ...getAppointmentStyle(appt, col)
               }"
             >
-              <div v-if="appt.status === 'confirmed'" class="h-full flex flex-col justify-between">
-                <div>
-                  <p class="text-[9px] font-bold uppercase leading-none mb-0.5 opacity-80">Confirmado</p>
-                  <p class="font-bold text-[11px] leading-tight truncate">{{ appt.patient_name }}</p>
-                </div>
-                <!-- Only show proc if height allows -->
-                <p v-if="getProcedureDuration(appt.procedure_id) >= 30" class="text-[9px] font-medium opacity-80 truncate">{{ getProcedureName(appt.procedure_id) }}</p>
+              <div v-if="appt.status === 'confirmed'" class="h-full flex flex-col overflow-hidden">
+                <p class="text-[8px] font-bold uppercase truncate opacity-80 mb-0.5">Confirmado - {{ appt.patient_name }}</p>
+                <p class="text-[9px] font-bold truncate">{{ getProcedureName(appt.procedure_id) }}</p>
+                <p v-if="getProcedureDuration(appt.procedure_id) > 20" class="text-[8px] font-medium opacity-80 truncate mt-max">{{ DateTime.fromISO(appt.start_datetime).toFormat('HH:mm') }} - {{ getProcedureDuration(appt.procedure_id) }} min</p>
               </div>
 
-              <div v-else class="h-full opacity-60">
-                <p class="text-[9px] font-bold uppercase leading-none mb-0.5 opacity-80">Hold</p>
-                <p class="font-bold text-[11px] leading-tight truncate">Bloqueado</p>
+              <div v-else class="h-full opacity-60 flex flex-col overflow-hidden">
+                <p class="text-[8px] font-bold uppercase truncate opacity-80 mb-0.5">Hold</p>
+                <p class="text-[9px] font-bold truncate">Bloqueado</p>
               </div>
             </div>
           </div>
