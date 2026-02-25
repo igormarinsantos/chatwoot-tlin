@@ -184,6 +184,14 @@ const testWebhook = async () => {
                 POST http://localhost:4000/api/clinics/{{ settings?.id || '1' }}/holds
               </code>
             </div>
+            <p class="text-[10px] text-n-slate-11/80 relative z-10 mt-2">
+              Para automatizar a <strong>leitura</strong> (GET) da agenda ou filtrar profissionais:
+            </p>
+            <div class="flex items-center gap-2 relative z-10">
+              <code class="flex-1 p-2 bg-white dark:bg-n-solid-2 shadow-sm rounded-lg text-[10px] font-mono text-blue-500 border border-blue-500/20 overflow-x-auto whitespace-nowrap select-all cursor-text">
+                GET http://localhost:4000/api/clinics/{{ settings?.id || '1' }}/appointments?professional_id=xxx
+              </code>
+            </div>
           </div>
         </div>
 

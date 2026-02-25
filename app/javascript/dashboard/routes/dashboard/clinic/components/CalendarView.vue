@@ -155,9 +155,9 @@ const getSlotClass = (profId, hour, minute) => {
     const breakEndNum = parseTimeToFloat(prof.working_hours.break_end);
     
     if (breakStartNum >= 0 && breakEndNum >= 0 && timeNum >= breakStartNum && timeNum < breakEndNum) {
-      return 'bg-amber-500/5 opacity-60 pointer-events-none'; 
+      return 'bg-amber-500/5 opacity-60 pointer-events-none repeating-linear-bg'; 
     }
-    return 'bg-n-slate-2/50 dark:bg-n-solid-3/50 opacity-50 pointer-events-none';
+    return 'opacity-50 pointer-events-none repeating-linear-bg'; // Removed solid dark BG so borders aren't hidden
   }
   return '';
 };
@@ -432,7 +432,7 @@ const getAppointmentStyle = (appt, col) => {
     top: `${Math.max(0, top)}px`,
     height: `${Math.max(20, height)}px`,
     left: leftOffset,
-    right: '4px',
+    right: '25px', // Keeps a right margin so the background container can be clicked
     zIndex,
   };
 };
@@ -627,7 +627,12 @@ onMounted(() => {
         </div>
 
         <!-- Columns -->
-        <div v-for="col in columns" :key="col.id" class="flex-1 min-w-[200px] md:min-w-[250px] border-r border-n-weak dark:border-n-weak/50 group bg-white dark:bg-n-solid-1">
+        <div 
+          v-for="col in columns" 
+          :key="col.id" 
+          class="flex-1 border-r border-n-weak dark:border-n-weak/50 group bg-white dark:bg-n-solid-1"
+          :class="viewMode === 'week' ? 'min-w-[50px] md:min-w-0' : 'min-w-[200px] md:min-w-[250px]'"
+        >
           <!-- Column Header -->
           <div 
             class="h-16 border-b border-n-weak dark:border-n-weak/50 p-2 flex flex-col items-center justify-center sticky top-0 bg-white dark:bg-n-solid-1 z-10"
