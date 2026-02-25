@@ -366,7 +366,8 @@ const saveAppointment = async () => {
     
     isModalOpen.value = false;
   } catch (error) {
-    alert('Erro ao processar agendamento: ' + error.message);
+    const errorMsg = error.response?.data?.message || error.message;
+    alert('Erro ao processar agendamento: ' + errorMsg);
   }
 };
 

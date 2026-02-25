@@ -349,6 +349,21 @@ Rails.application.routes.draw do
           end
           resources :working_hours, only: [:update]
 
+          namespace :clinic_scheduler, path: 'clinic' do
+            resource :availability, only: [:show], controller: 'availability'
+
+            resources :professionals, only: [:index, :create, :update, :destroy]
+            resources :resources, only: [:index, :create, :update, :destroy]
+            resources :procedures, only: [:index, :create, :update, :destroy]
+            resources :availability_blocks, only: [:index, :create, :update, :destroy]
+
+            resources :holds, only: [:index, :create, :destroy] do
+              post :convert, on: :member
+            end
+            
+            resources :appointments, only: [:index, :update]
+          end
+
           resources :portals do
             member do
               patch :archive
