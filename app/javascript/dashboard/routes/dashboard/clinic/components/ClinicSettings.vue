@@ -62,6 +62,25 @@ const days = [
   { id: 'sunday', name: 'Domingo' }
 ];
 
+const activeTab = ref('general'); // 'general' | 'resources'
+const resources = computed(() => store.getters['clinicScheduler/getResources']);
+
+// Resource form
+const resourceForm = ref({ name: '', type: '' });
+
+const addResource = () => {
+  if (!resourceForm.value.name.trim()) return alert('Nome do recurso é obrigatório.');
+  
+  store.dispatch('clinicScheduler/createResource', { ...resourceForm.value });
+  resourceForm.value = { name: '', type: '' }; // reset
+};
+
+const deleteResource = (id) => {
+  if (confirm('Tem certeza que deseja excluir este recurso? Isso não apagará históricos antigos.')) {
+    store.dispatch('clinicScheduler/deleteResource', id);
+  }
+};
+
 const testWebhook = async () => {
   if (!localSettings.value.webhook_url) {
     alert('Por favor, defina a URL do Webhook primeiro.');
@@ -90,12 +109,25 @@ const testWebhook = async () => {
 
 <template>
   <div class="bg-white dark:bg-n-solid-2 rounded-3xl border border-n-weak dark:border-n-weak/50 overflow-hidden shadow-sm">
-    <header class="p-6 border-b border-n-weak dark:border-n-weak/50">
-      <h3 class="text-lg font-bold text-n-slate-12">Configurações da Clínica</h3>
-      <p class="text-xs text-n-slate-10 uppercase font-bold tracking-widest mt-1">Horários e Identidade</p>
+    <header class="p-6 border-b border-n-weak dark:border-n-weak/50 flex gap-6">
+      <button 
+        @click="activeTab = 'general'"
+        :class="activeTab === 'general' ? 'text-n-brand border-b-2 border-n-brand' : 'text-n-slate-11 hover:text-n-slate-12'"
+        class="pb-2 font-bold transition-colors"
+      >
+        Geral e Integrações
+      </button>
+      <button 
+        @click="activeTab = 'resources'"
+        :class="activeTab === 'resources' ? 'text-n-brand border-b-2 border-n-brand' : 'text-n-slate-11 hover:text-n-slate-12'"
+        class="pb-2 font-bold transition-colors flex items-center gap-2"
+      >
+        Recursos (Salas/Equipamentos)
+      </button>
     </header>
 
-    <div class="p-6 space-y-8">
+    <!-- TAB GERAL -->
+    <div v-if="activeTab === 'general'" class="p-6 space-y-8 animate-in fade-in duration-300">
       <!-- Clinic Name -->
       <div class="space-y-3">
         <label class="text-sm font-bold text-n-slate-11">Nome da Clínica</label>
@@ -239,6 +271,73 @@ const testWebhook = async () => {
           Salvar Configurações
         </button>
       </div>
+    </div>
+    
+    <!-- TAB RECURSOS -->
+    <div v-if="activeTab === 'resources'" class="p-6 space-y-8 animate-in fade-in duration-300">
+      
+      <div class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700/50 rounded-2xl p-5 mb-6">
+        <div class="flex items-start gap-3">
+          <span class="i-lucide-box size-5 text-amber-600 dark:text-amber-500 mt-0.5" />
+          <div>
+            <h4 class="text-sm font-bold text-n-slate-12">O que são Recursos?</h4>
+            <p class="text-xs text-n-slate-11 mt-1 leading-relaxed">
+              Recursos são ativos físicos que só podem ser usados por uma pessoa de cada vez (ex: "Sala de Cirurgia 1", "Aparelho de Laser X"). 
+              Se um Procedimento exigir um Recurso, o sistema bloqueará agendamentos simultâneos para esse mesmo recurso, mesmo que com profissionais diferentes.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <h4 class="text-sm font-bold text-n-slate-12 uppercase tracking-wide">Adicionar Novo Recurso</h4>
+        <div class="flex gap-3 items-start">
+          <div class="flex-1 space-y-1">
+             <input v-model="resourceForm.name" placeholder="Nome (Ex: Sala 01)" class="w-full p-3 bg-n-slate-1 dark:bg-n-solid-3 border border-n-weak rounded-xl text-sm outline-none focus:border-n-brand" />
+          </div>
+          <div class="w-1/3 space-y-1">
+             <select v-model="resourceForm.type" class="w-full p-3 bg-n-slate-1 dark:bg-n-solid-3 border border-n-weak rounded-xl text-sm outline-none focus:border-n-brand">
+               <option value="">Tipo (Opcional)</option>
+               <option value="room">Sala</option>
+               <option value="equipment">Equipamento</option>
+             </select>
+          </div>
+          <button @click="addResource" class="px-6 py-3 bg-n-brand text-white font-bold text-sm rounded-xl shadow-lg shadow-n-brand/20 hover:scale-105 transition-transform whitespace-nowrap">
+            Adicionar
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-4 pt-6 mt-6 border-t border-n-weak dark:border-n-weak/50">
+        <h4 class="text-sm font-bold text-n-slate-12 uppercase tracking-wide">Recursos Cadastrados</h4>
+        
+        <div v-if="!resources.length" class="p-8 text-center border-2 border-dashed border-n-weak rounded-2xl bg-n-slate-1/50 dark:bg-n-solid-2">
+          <p class="text-sm font-medium text-n-slate-10">Nenhum recurso cadastrado ainda.</p>
+        </div>
+
+        <div v-else class="grid md:grid-cols-2 gap-4">
+          <div v-for="res in resources" :key="res.id" class="flex flex-col p-4 bg-white dark:bg-n-solid-3 border border-n-weak rounded-2xl hover:border-n-brand/50 transition-colors group relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-transparent to-n-brand/5 dark:to-n-brand/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+            
+            <div class="flex justify-between items-start z-10">
+              <div class="flex gap-3">
+                 <div class="size-10 rounded-xl flex items-center justify-center" :class="res.type === 'equipment' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600'">
+                    <span :class="res.type === 'equipment' ? 'i-lucide-activity' : 'i-lucide-door-open'" class="size-5" />
+                 </div>
+                 <div>
+                   <h5 class="text-sm font-bold text-n-slate-12">{{ res.name }}</h5>
+                   <p class="text-[11px] font-medium text-n-slate-9 uppercase tracking-widest">{{ res.type === 'equipment' ? 'Equipamento' : 'Sala/Consultório' }}</p>
+                 </div>
+              </div>
+              
+              <button @click="deleteResource(res.id)" class="p-2 text-n-slate-8 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors" title="Excluir">
+                <span class="i-lucide-trash size-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    
     </div>
   </div>
 </template>

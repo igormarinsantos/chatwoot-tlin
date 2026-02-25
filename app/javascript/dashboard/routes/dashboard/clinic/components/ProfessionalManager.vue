@@ -12,13 +12,11 @@ const newProfessional = ref({
   name: '', 
   color: 'blue', 
   procedure_ids: [],
-  working_hours: {
-    start: '08:00',
-    end: '18:00',
-    break_start: '12:00',
-    break_end: '13:00'
-  }
 });
+
+// For availability blocks management
+const availabilityBlocks = computed(() => store.getters['clinicScheduler/getAvailabilityBlocks']);
+const currentBlocks = ref([]);
 
 const professionalColors = [
   { id: 'blue', hex: '#3b82f6', bgHex: '#dbeafe', textHex: '#1e40af' },
@@ -30,18 +28,28 @@ const professionalColors = [
 
 const addProfessional = async () => {
   if (!newProfessional.value.name.trim()) return;
+  
+  let savedProf;
   if (newProfessional.value.id) {
-    await store.dispatch('clinicScheduler/updateProfessional', newProfessional.value);
+    savedProf = await store.dispatch('clinicScheduler/updateProfessional', newProfessional.value);
   } else {
-    await store.dispatch('clinicScheduler/createProfessional', newProfessional.value);
+    savedProf = await store.dispatch('clinicScheduler/createProfessional', newProfessional.value);
   }
+  
+  // Also save the availability blocks for this professional
+  await store.dispatch('clinicScheduler/updateAvailabilityBlocks', {
+    entity_type: 'professional',
+    entity_id: savedProf?.id || newProfessional.value.id,
+    blocks: currentBlocks.value
+  });
+  
   newProfessional.value = { 
     id: null, 
     name: '', 
     color: 'blue', 
     procedure_ids: [],
-    working_hours: { start: '08:00', end: '18:00', break_start: '12:00', break_end: '13:00' }
   };
+  currentBlocks.value = [];
   isCreating.value = false;
 };
 
@@ -51,9 +59,34 @@ const editProfessional = (prof) => {
     name: prof.name, 
     color: prof.color || 'blue', 
     procedure_ids: prof.procedures?.map(p => p.id) || [],
-    working_hours: prof.working_hours || { start: '08:00', end: '18:00', break_start: '12:00', break_end: '13:00' }
   };
+  
+  const blocksForProf = availabilityBlocks.value.filter(b => b.entity_type === 'professional' && b.entity_id === prof.id);
+  if (blocksForProf.length > 0) {
+    currentBlocks.value = JSON.parse(JSON.stringify(blocksForProf));
+  } else {
+    // Legacy fallback mapping
+    currentBlocks.value = [
+      { id: Date.now().toString(), day_of_week: 'all', start_time: prof.working_hours?.start || '08:00', end_time: prof.working_hours?.end || '18:00', block_type: 'working_hours' },
+      { id: (Date.now()+1).toString(), day_of_week: 'all', start_time: prof.working_hours?.break_start || '12:00', end_time: prof.working_hours?.break_end || '13:00', block_type: 'break' }
+    ];
+  }
+  
   isCreating.value = true;
+};
+
+const addBlockRow = () => {
+  currentBlocks.value.push({
+    id: Date.now().toString(),
+    day_of_week: 'all',
+    start_time: '08:00',
+    end_time: '18:00',
+    block_type: 'working_hours'
+  });
+};
+
+const removeBlockRow = (index) => {
+  currentBlocks.value.splice(index, 1);
 };
 
 const deleteProfessional = async (id) => {
@@ -83,7 +116,14 @@ const toggleProcedure = (prof, procId) => {
         <p class="text-xs text-n-slate-10 uppercase font-bold tracking-widest mt-1">Especialistas da Clínica</p>
       </div>
       <button
-        @click="() => { newProfessional = { id: null, name: '', color: 'blue', procedure_ids: [], working_hours: { start: '08:00', end: '18:00', break_start: '12:00', break_end: '13:00' } }; isCreating = true; }"
+        @click="() => { 
+          newProfessional = { id: null, name: '', color: 'blue', procedure_ids: [] }; 
+          currentBlocks = [
+            { id: Date.now().toString(), day_of_week: 'all', start_time: '08:00', end_time: '18:00', block_type: 'working_hours' },
+            { id: (Date.now()+1).toString(), day_of_week: 'all', start_time: '12:00', end_time: '13:00', block_type: 'break' }
+          ];
+          isCreating = true; 
+        }"
         class="size-10 bg-n-brand/10 text-n-brand rounded-xl flex items-center justify-center hover:bg-n-brand/20 transition-all"
       >
         <span class="i-lucide-plus size-5" />
@@ -134,23 +174,44 @@ const toggleProcedure = (prof, procId) => {
           </div>
         </div>
 
-        <div class="space-y-2 pt-2 border-t border-n-brand/10">
-          <p class="text-xs font-bold text-n-slate-10">Horários de Trabalho (Diário):</p>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-1">
-              <label class="text-[10px] font-bold text-n-slate-9">Expediente (Início - Fim)</label>
-              <div class="flex gap-2">
-                <input v-model="newProfessional.working_hours.start" type="time" class="w-full px-2 py-1.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg text-xs outline-none" />
-                <input v-model="newProfessional.working_hours.end" type="time" class="w-full px-2 py-1.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg text-xs outline-none" />
-              </div>
-            </div>
-            <div class="space-y-1">
-              <label class="text-[10px] font-bold text-n-slate-9">Pausa / Almoço (Início - Fim)</label>
-              <div class="flex gap-2">
-                <input v-model="newProfessional.working_hours.break_start" type="time" class="w-full px-2 py-1.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg text-xs outline-none" />
-                <input v-model="newProfessional.working_hours.break_end" type="time" class="w-full px-2 py-1.5 bg-white dark:bg-n-solid-2 border border-n-weak rounded-lg text-xs outline-none" />
-              </div>
-            </div>
+        <div class="space-y-3 pt-4 border-t border-n-brand/10">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-bold text-n-slate-10">Regras de Disponibilidade (Availability Blocks):</p>
+            <button @click="addBlockRow" class="text-[10px] font-bold text-n-brand bg-n-brand/10 px-2 py-1 rounded-md hover:bg-n-brand/20 transition-colors">
+              + Adicionar Regra
+            </button>
+          </div>
+          
+          <div v-for="(block, index) in currentBlocks" :key="block.id" class="flex items-center gap-2 bg-white dark:bg-n-solid-2 p-2 rounded-xl border border-n-weak hover:border-n-brand/30 transition-all">
+             <select v-model="block.block_type" class="p-2 text-xs bg-transparent outline-none w-28 font-bold border-r border-n-weak dark:border-n-weak/50" :class="block.block_type === 'break' ? 'text-amber-500' : 'text-green-500'">
+                <option value="working_hours">Expediente</option>
+                <option value="break">Pausa / Almoço</option>
+             </select>
+             
+             <select v-model="block.day_of_week" class="p-2 text-xs bg-transparent outline-none flex-1 font-medium text-n-slate-11">
+                <option value="all">Todos os Dias</option>
+                <option value="monday">Segunda-feira</option>
+                <option value="tuesday">Terça-feira</option>
+                <option value="wednesday">Quarta-feira</option>
+                <option value="thursday">Quinta-feira</option>
+                <option value="friday">Sexta-feira</option>
+                <option value="saturday">Sábado</option>
+                <option value="sunday">Domingo</option>
+             </select>
+             
+             <div class="flex items-center gap-1 border-l border-n-weak dark:border-n-weak/50 pl-2">
+               <input v-model="block.start_time" type="time" class="w-20 p-1.5 text-xs bg-n-slate-1 dark:bg-n-solid-3 rounded-md outline-none focus:ring-1 focus:ring-n-brand" />
+               <span class="text-xs text-n-slate-9 mx-1">às</span>
+               <input v-model="block.end_time" type="time" class="w-20 p-1.5 text-xs bg-n-slate-1 dark:bg-n-solid-3 rounded-md outline-none focus:ring-1 focus:ring-n-brand" />
+             </div>
+             
+             <button @click="removeBlockRow(index)" class="p-1.5 text-n-slate-8 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg ml-1">
+               <span class="i-lucide-x size-3.5" />
+             </button>
+          </div>
+          
+          <div v-if="!currentBlocks.length" class="text-[10px] text-n-slate-8 italic text-center py-2">
+            Nenhuma regra configurada. O profissional não terá slots disponíveis na agenda.
           </div>
         </div>
 

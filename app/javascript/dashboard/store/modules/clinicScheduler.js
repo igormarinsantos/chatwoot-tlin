@@ -3,6 +3,8 @@ import ClinicSchedulerAPI from '../../api/clinicScheduler';
 const state = {
   professionals: [],
   procedures: [],
+  resources: [],
+  availability_blocks: [],
   appointments: [],
   clinicSettings: null,
   activeClinicId: '1', // Default ID used in auto-creation
@@ -15,6 +17,8 @@ const state = {
 const getters = {
   getProfessionals: _state => _state.professionals,
   getProcedures: _state => _state.procedures,
+  getResources: _state => _state.resources,
+  getAvailabilityBlocks: _state => _state.availability_blocks,
   getAppointments: _state => _state.appointments,
   getClinicSettings: _state => _state.clinicSettings,
 };
@@ -115,6 +119,63 @@ const actions = {
       console.error('Error deleting procedure:', error);
     }
   },
+  
+  // RESOURCES
+  fetchResources: async ({ commit, state }) => {
+    commit('SET_UI_FLAG', { isFetching: true });
+    try {
+      const response = await ClinicSchedulerAPI.getResources(state.activeClinicId);
+      commit('SET_RESOURCES', response.data);
+    } catch (error) {
+      console.error('Error fetching resources:', error);
+    } finally {
+      commit('SET_UI_FLAG', { isFetching: false });
+    }
+  },
+  createResource: async ({ commit, state }, data) => {
+    try {
+      const response = await ClinicSchedulerAPI.createResource(state.activeClinicId, data);
+      commit('ADD_RESOURCE', response.data);
+    } catch (error) {
+      console.error('Error creating resource:', error);
+    }
+  },
+  updateResource: async ({ dispatch, state }, data) => {
+    try {
+      await ClinicSchedulerAPI.updateResource(state.activeClinicId, data);
+      dispatch('fetchResources');
+    } catch (error) {
+      console.error('Error updating resource:', error);
+    }
+  },
+  deleteResource: async ({ dispatch }, id) => {
+    try {
+      await ClinicSchedulerAPI.deleteResource(id);
+      dispatch('fetchResources');
+    } catch (error) {
+      console.error('Error deleting resource:', error);
+    }
+  },
+
+  // AVAILABILITY BLOCKS
+  fetchAvailabilityBlocks: async ({ commit, state }) => {
+    try {
+      const response = await ClinicSchedulerAPI.getAvailabilityBlocks(state.activeClinicId);
+      commit('SET_AVAILABILITY_BLOCKS', response.data);
+    } catch (error) {
+      console.error('Error fetching availability blocks:', error);
+    }
+  },
+  updateAvailabilityBlocks: async ({ dispatch, state }, payload) => {
+    try {
+      await ClinicSchedulerAPI.updateAvailabilityBlocks(state.activeClinicId, payload);
+      dispatch('fetchAvailabilityBlocks');
+    } catch (error) {
+      console.error('Error updating availability blocks:', error);
+    }
+  },
+
+  // APPOINTMENTS
   fetchAppointments: async ({ commit, state }) => {
     try {
       const response = await ClinicSchedulerAPI.getAppointments(state.activeClinicId);
@@ -179,6 +240,15 @@ const mutations = {
   },
   SET_APPOINTMENTS(_state, appointments) {
     _state.appointments = appointments;
+  },
+  SET_RESOURCES(_state, resources) {
+    _state.resources = resources;
+  },
+  ADD_RESOURCE(_state, resource) {
+    _state.resources.push(resource);
+  },
+  SET_AVAILABILITY_BLOCKS(_state, blocks) {
+    _state.availability_blocks = blocks;
   },
   SET_CLINIC_SETTINGS(_state, settings) {
     _state.clinicSettings = settings;

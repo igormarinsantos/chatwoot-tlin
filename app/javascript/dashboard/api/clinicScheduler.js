@@ -23,6 +23,8 @@ export const getLocalData = () => {
     },
     professionals: [],
     procedures: [],
+    resources: [],
+    availability_blocks: [],
     appointments: [],
   };
 };
@@ -170,6 +172,67 @@ export default {
       fireWebhook(proc.clinic_id || '1', 'procedure_deleted', { id });
     }
     return Promise.resolve({ data: {} });
+  },
+
+  // Resources
+  getResources(clinicId) {
+    const data = getLocalData();
+    return Promise.resolve({ data: data.resources || [] });
+  },
+  createResource(clinicId, payload) {
+    const data = getLocalData();
+    const newRes = { ...payload, id: generateId(), clinic_id: clinicId };
+    data.resources.push(newRes);
+    saveLocalData(data);
+    fireWebhook(clinicId, 'resource_created', newRes);
+    return Promise.resolve({ data: newRes });
+  },
+  updateResource(clinicId, payload) {
+    const data = getLocalData();
+    const resIndex = data.resources.findIndex(c => c.id === payload.id);
+    if (resIndex !== -1) {
+      const updatedRes = { ...data.resources[resIndex], ...payload, clinic_id: clinicId };
+      data.resources[resIndex] = updatedRes;
+      saveLocalData(data);
+      fireWebhook(clinicId, 'resource_updated', updatedRes);
+      return Promise.resolve({ data: updatedRes });
+    }
+    return Promise.reject(new Error('Resource not found'));
+  },
+  deleteResource(id) {
+    const data = getLocalData();
+    const res = data.resources.find(c => c.id === id);
+    data.resources = data.resources.filter(c => c.id !== id);
+    saveLocalData(data);
+    if (res) {
+      fireWebhook(res.clinic_id || '1', 'resource_deleted', { id });
+    }
+    return Promise.resolve({ data: {} });
+  },
+
+  // Availability Blocks
+  getAvailabilityBlocks(clinicId) {
+    const data = getLocalData();
+    return Promise.resolve({ data: data.availability_blocks || [] });
+  },
+  updateAvailabilityBlocks(clinicId, payload) {
+    // Expected Payload: { entity_type, entity_id, blocks: [] }
+    const data = getLocalData();
+    // Remove existing blocks for this entity
+    data.availability_blocks = data.availability_blocks.filter(
+      b => !(b.entity_type === payload.entity_type && b.entity_id === payload.entity_id)
+    );
+    // Add new blocks
+    const newBlocks = payload.blocks.map(b => ({
+      ...b,
+      id: generateId(),
+      entity_type: payload.entity_type,
+      entity_id: payload.entity_id,
+      clinic_id: clinicId
+    }));
+    data.availability_blocks.push(...newBlocks);
+    saveLocalData(data);
+    return Promise.resolve({ data: newBlocks });
   },
 
   // Appointments

@@ -5,7 +5,7 @@ import { useStore } from 'vuex';
 const store = useStore();
 const procedures = computed(() => store.getters['clinicScheduler/getProcedures']);
 const isCreating = ref(false);
-const newProcedure = ref({ name: '', duration_minutes: 30, price: 0 });
+const newProcedure = ref({ name: '', duration_minutes: 30, price: 0, require_resource: false });
 
 const addProcedure = async () => {
   if (!newProcedure.value.name.trim()) return;
@@ -14,12 +14,12 @@ const addProcedure = async () => {
   } else {
     await store.dispatch('clinicScheduler/createProcedure', { ...newProcedure.value });
   }
-  newProcedure.value = { name: '', duration_minutes: 30, price: 0 };
+  newProcedure.value = { name: '', duration_minutes: 30, price: 0, require_resource: false };
   isCreating.value = false;
 };
 
 const editProcedure = (proc) => {
-  newProcedure.value = { ...proc };
+  newProcedure.value = { ...proc, require_resource: proc.require_resource || false };
   isCreating.value = true;
 };
 </script>
@@ -66,9 +66,22 @@ const editProcedure = (proc) => {
               />
             </div>
           </div>
+          
+          <div class="flex items-center gap-2 mt-4 bg-amber-50 dark:bg-amber-900/10 p-3 rounded-xl border border-amber-200 dark:border-amber-700/50">
+            <input 
+              type="checkbox" 
+              id="requireResource" 
+              v-model="newProcedure.require_resource"
+              class="size-4 rounded border-n-weak text-n-brand focus:ring-n-brand" 
+            />
+            <label for="requireResource" class="text-xs font-bold text-amber-700 dark:text-amber-500 cursor-pointer">
+               Exige Alocação de Recurso (Sala Específica, Laser, etc.)
+            </label>
+          </div>
+          
         </div>
         <div class="flex gap-2">
-          <button @click="isCreating = false; newProcedure = { name: '', duration_minutes: 30, price: 0 }" class="flex-1 py-2 text-xs font-bold text-n-slate-10 hover:bg-n-alpha-1 rounded-lg">Cancelar</button>
+          <button @click="isCreating = false; newProcedure = { name: '', duration_minutes: 30, price: 0, require_resource: false }" class="flex-1 py-2 text-xs font-bold text-n-slate-10 hover:bg-n-alpha-1 rounded-lg">Cancelar</button>
           <button @click="addProcedure" class="flex-1 py-2 text-xs font-bold bg-n-brand text-white rounded-lg">{{ newProcedure.id ? 'Salvar' : 'Adicionar' }}</button>
         </div>
       </div>
@@ -93,6 +106,10 @@ const editProcedure = (proc) => {
                 <div class="flex items-center gap-1.5" v-if="proc.price">
                   <span class="i-lucide-dollar-sign size-3 text-green-500" />
                   <span class="text-[10px] text-green-600 font-bold dark:text-green-500 font-mono">R$ {{ Number(proc.price).toFixed(2) }}</span>
+                </div>
+                <div class="flex items-center gap-1.5" v-if="proc.require_resource">
+                  <span class="i-lucide-box size-3 text-amber-500" />
+                  <span class="text-[10px] text-amber-600 font-bold dark:text-amber-500">Exige Recurso</span>
                 </div>
               </div>
             </div>

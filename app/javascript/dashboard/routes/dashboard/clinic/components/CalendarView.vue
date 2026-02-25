@@ -7,6 +7,9 @@ const store = useStore();
 const professionals = computed(() => store.getters['clinicScheduler/getProfessionals']);
 const procedures_global = computed(() => store.getters['clinicScheduler/getProcedures']);
 const appointments = computed(() => store.getters['clinicScheduler/getAppointments']);
+const resources = computed(() => store.getters['clinicScheduler/getResources']);
+const availabilityBlocks = computed(() => store.getters['clinicScheduler/getAvailabilityBlocks']);
+
 const selectedProfessionalId = ref('all');
 const currentDate = ref(DateTime.now());
 const viewMode = ref('week'); // 'day', '3days', 'week'
@@ -31,6 +34,7 @@ const appointmentForm = ref({
   id: null,
   professional_id: null,
   procedure_id: null,
+  resource_id: null,
   start_date: '',
   start_time: '',
   patient_name: '',
@@ -51,6 +55,7 @@ const openAppointmentModal = (day, hour, minute = 0) => {
     id: null,
     professional_id: prof_id,
     procedure_id: null,
+    resource_id: null,
     start_date: day.toISODate(),
     start_time: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
     patient_name: '',
@@ -66,12 +71,12 @@ const openEditModal = () => {
     id: selectedAppointment.value.id,
     professional_id: selectedAppointment.value.professional_id,
     procedure_id: selectedAppointment.value.procedure_id,
+    resource_id: selectedAppointment.value.resource_id || null,
     start_date: dt.toISODate(),
     start_time: dt.toFormat('HH:mm'),
     patient_name: selectedAppointment.value.patient_name,
     patient_phone: selectedAppointment.value.patient_phone,
   };
-  modalMode.value = 'edit';
   modalMode.value = 'edit';
   isViewingAppointment.value = false;
   isModalOpen.value = true;
@@ -129,35 +134,75 @@ const onColumnClick = (e, col) => {
   }
 };
 
-const isSlotDisabled = (profId, hour, minute) => {
+const getProfessionalBlocks = (profId, dateObj) => {
+  if (!dateObj || !dateObj.isValid) return [];
+  const dayName = dateObj.weekdayLong.toLowerCase(); // 'monday', 'tuesday', etc. if luxon is en, might need manual map if pt
+  
+  // Luxon weekdayLong depends on locale. Let's make it robust using weekday (1=Mon, 7=Sun)
+  const daysMap = { 1: 'monday', 2: 'tuesday', 3: 'wednesday', 4: 'thursday', 5: 'friday', 6: 'saturday', 7: 'sunday' };
+  const targetDay = daysMap[dateObj.weekday];
+  
+  return availabilityBlocks.value.filter(b => 
+    b.entity_type === 'professional' && 
+    b.entity_id === profId &&
+    (b.day_of_week === 'all' || b.day_of_week === targetDay)
+  );
+};
+
+const isSlotDisabled = (profId, hour, minute, dateObj) => {
   if (profId === 'all') return false;
-  const prof = professionals.value.find(p => p.id === profId);
-  if (!prof || !prof.working_hours) return false;
+  
+  const blocks = getProfessionalBlocks(profId, dateObj);
+  // If no blocks configured, entirely disabled
+  if (blocks.length === 0) return true;
   
   const timeNum = hour + (minute / 60);
-  const startNum = parseTimeToFloat(prof.working_hours.start);
-  const endNum = parseTimeToFloat(prof.working_hours.end);
-  const breakStartNum = parseTimeToFloat(prof.working_hours.break_start);
-  const breakEndNum = parseTimeToFloat(prof.working_hours.break_end);
-
-  if (startNum >= 0 && endNum >= 0 && (timeNum < startNum || timeNum >= endNum)) return true;
-  if (breakStartNum >= 0 && breakEndNum >= 0 && timeNum >= breakStartNum && timeNum < breakEndNum) return true;
+  
+  const workingBlocks = blocks.filter(b => b.block_type === 'working_hours');
+  const breakBlocks = blocks.filter(b => b.block_type === 'break');
+  
+  // Check if within at least one working block
+  let isWithinWorking = false;
+  for (const w of workingBlocks) {
+    const wsNum = parseTimeToFloat(w.start_time);
+    const weNum = parseTimeToFloat(w.end_time);
+    if (wsNum >= 0 && weNum >= 0 && timeNum >= wsNum && timeNum < weNum) {
+      isWithinWorking = true;
+      break;
+    }
+  }
+  
+  if (!isWithinWorking) return true;
+  
+  // Check if falls inside any break
+  for (const b of breakBlocks) {
+    const bsNum = parseTimeToFloat(b.start_time);
+    const beNum = parseTimeToFloat(b.end_time);
+    if (bsNum >= 0 && beNum >= 0 && timeNum >= bsNum && timeNum < beNum) {
+      return true;
+    }
+  }
+  
   return false;
 };
 
-const getSlotClass = (profId, hour, minute) => {
-  if (isSlotDisabled(profId, hour, minute)) {
-    const prof = professionals.value.find(p => p.id === profId);
-    if (!prof || !prof.working_hours) return 'bg-n-slate-2/50 dark:bg-n-solid-3/50 cursor-not-allowed opacity-50 relative overflow-hidden repeating-linear-bg';
+const getSlotClass = (profId, hour, minute, dateObj) => {
+  if (isSlotDisabled(profId, hour, minute, dateObj)) {
+    const blocks = getProfessionalBlocks(profId, dateObj);
+    if (blocks.length === 0) return 'bg-n-slate-2/50 dark:bg-n-solid-3/50 cursor-not-allowed opacity-50 relative overflow-hidden repeating-linear-bg';
     
     const timeNum = hour + (minute / 60);
-    const breakStartNum = parseTimeToFloat(prof.working_hours.break_start);
-    const breakEndNum = parseTimeToFloat(prof.working_hours.break_end);
+    const breakBlocks = blocks.filter(b => b.block_type === 'break');
     
-    if (breakStartNum >= 0 && breakEndNum >= 0 && timeNum >= breakStartNum && timeNum < breakEndNum) {
-      return 'bg-amber-500/5 opacity-60 pointer-events-none repeating-linear-bg'; 
+    for (const b of breakBlocks) {
+      const bsNum = parseTimeToFloat(b.start_time);
+      const beNum = parseTimeToFloat(b.end_time);
+      if (bsNum >= 0 && beNum >= 0 && timeNum >= bsNum && timeNum < beNum) {
+        return 'bg-amber-500/5 opacity-60 pointer-events-none repeating-linear-bg'; 
+      }
     }
-    return 'opacity-50 pointer-events-none repeating-linear-bg'; // Removed solid dark BG so borders aren't hidden
+    
+    return 'opacity-50 pointer-events-none repeating-linear-bg'; 
   }
   return '';
 };
@@ -165,53 +210,97 @@ const getSlotClass = (profId, hour, minute) => {
 const conflictCheck = () => {
   if (!appointmentForm.value.procedure_id || !appointmentForm.value.professional_id) return false;
   
-  // Working hours validation
-  const prof = professionals.value.find(p => p.id === appointmentForm.value.professional_id);
-  if (prof && prof.working_hours) {
-    const timeNum = parseTimeToFloat(appointmentForm.value.start_time);
-    
-    const startNum = parseTimeToFloat(prof.working_hours.start);
-    const endNum = parseTimeToFloat(prof.working_hours.end);
-    if (startNum >= 0 && endNum >= 0 && (timeNum < startNum || timeNum >= endNum)) {
-      alert(`O horário está fora do expediente do profissional (${prof.working_hours.start} às ${prof.working_hours.end}).`);
-      return true;
-    }
-    
-    const breakStartNum = parseTimeToFloat(prof.working_hours.break_start);
-    const breakEndNum = parseTimeToFloat(prof.working_hours.break_end);
-    if (breakStartNum >= 0 && breakEndNum >= 0 && timeNum >= breakStartNum && timeNum < breakEndNum) {
-      alert(`O horário coincide com o intervalo do profissional (${prof.working_hours.break_start} às ${prof.working_hours.break_end}).`);
-      return true;
-    }
-  }
-  
   const startObj = DateTime.fromISO(`${appointmentForm.value.start_date}T${appointmentForm.value.start_time}`);
   if (!startObj.isValid) return true;
 
   const duration = getProcedureDuration(appointmentForm.value.procedure_id);
   const endObj = startObj.plus({ minutes: duration });
-
-  const profAppts = appointments.value.filter(a => 
-    a.professional_id === appointmentForm.value.professional_id && a.status !== 'canceled' && a.id !== appointmentForm.value.id
-  );
-
-  for (const appt of profAppts) {
-    const existingStart = DateTime.fromISO(appt.start_datetime);
-    if (!existingStart.isValid) continue;
-    
-    const existingDuration = getProcedureDuration(appt.procedure_id);
-    const existingEnd = existingStart.plus({ minutes: existingDuration });
-
-    if (startObj < existingEnd && endObj > existingStart) {
+  
+  const timeNumStart = startObj.hour + (startObj.minute / 60);
+  const timeNumEnd = endObj.hour + (endObj.minute / 60);
+  
+  // Working hours validation via Blocks
+  const blocks = getProfessionalBlocks(appointmentForm.value.professional_id, startObj);
+  
+  if (blocks.length === 0) {
+    alert('Profissional sem disponibilidade configurada para este dia.');
+    return true;
+  }
+  
+  const workingBlocks = blocks.filter(b => b.block_type === 'working_hours');
+  const breakBlocks = blocks.filter(b => b.block_type === 'break');
+  
+  let withinWorking = false;
+  for (const w of workingBlocks) {
+    const wsNum = parseTimeToFloat(w.start_time);
+    const weNum = parseTimeToFloat(w.end_time);
+    if (wsNum >= 0 && weNum >= 0 && (timeNumStart >= wsNum) && (timeNumEnd <= weNum)) {
+      withinWorking = true;
+      break;
+    }
+  }
+  if (!withinWorking) {
+    alert('O horário de agendamento pretendido excede os limites de expediente aprovados deste profissional.');
+    return true;
+  }
+  
+  for (const b of breakBlocks) {
+    const bsNum = parseTimeToFloat(b.start_time);
+    const beNum = parseTimeToFloat(b.end_time);
+    // Intersection condition: start < end_break && end > break_start
+    if (bsNum >= 0 && beNum >= 0 && (timeNumStart < beNum && timeNumEnd > bsNum)) {
+      alert('O agendamento cruza uma faixa de intervalo/almoço obrigatória restrita ao profissional.');
       return true;
     }
   }
+
+  // Intersect Appointments for Professional or Resource
+  const conflictingAppts = appointments.value.filter(a => {
+    if (a.status === 'canceled' || a.id === appointmentForm.value.id) return false;
+    
+    const matchesProfessional = a.professional_id === appointmentForm.value.professional_id;
+    const matchesResource = appointmentForm.value.resource_id && a.resource_id === appointmentForm.value.resource_id;
+    
+    return matchesProfessional || matchesResource;
+  });
+
+  for (const appt of conflictingAppts) {
+    const existingStart = DateTime.fromISO(appt.start_datetime);
+    if (!existingStart.isValid) continue;
+    
+    // Check if appointment has explicit end_datetime (from Phase 7 refactor), fallback to calculated
+    let existingEnd;
+    if (appt.end_datetime) {
+      existingEnd = DateTime.fromISO(appt.end_datetime);
+    } else {
+      const existingDuration = getProcedureDuration(appt.procedure_id);
+      existingEnd = existingStart.plus({ minutes: existingDuration });
+    }
+
+    if (startObj < existingEnd && endObj > existingStart) {
+      // It's a conflict!
+      if (appt.professional_id === appointmentForm.value.professional_id) {
+          alert('Erro de Conflito: O profissional já possui atividade neste horário.');
+      } else {
+          alert('Erro de Conflito de Recurso: A sala/equipamento já está reservada neste horário.');
+      }
+      return true;
+    }
+  }
+  
+  // TODO: Implement explicit availabilityBlocks check (Vacations, Manual blocks)
   return false;
 };
 
 const validateForm = () => {
   if (!appointmentForm.value.professional_id) return 'Selecione um profissional.';
   if (!appointmentForm.value.procedure_id) return 'Selecione um procedimento.';
+  
+  const selectedProcedure = procedures_global.value.find(p => p.id === appointmentForm.value.procedure_id);
+  if (selectedProcedure?.require_resource && !appointmentForm.value.resource_id) {
+    return `O procedimento '${selectedProcedure.name}' exige a alocação de um recurso (ex: Sala Especial, Laser). Por favor, selecione-o.`;
+  }
+  
   if (!appointmentForm.value.patient_name.trim()) return 'Nome do paciente é obrigatório.';
   if (!appointmentForm.value.patient_phone.trim()) return 'Telefone do paciente é obrigatório.';
   if (!appointmentForm.value.start_date || !appointmentForm.value.start_time) return 'Data e Hora são obrigatórios.';
@@ -231,13 +320,24 @@ const saveAppointment = async () => {
   }
 
   try {
-    const isoDate = DateTime.fromISO(`${appointmentForm.value.start_date}T${appointmentForm.value.start_time}`).toISO();
+    const startObj = DateTime.fromISO(`${appointmentForm.value.start_date}T${appointmentForm.value.start_time}`);
+    const duration = getProcedureDuration(appointmentForm.value.procedure_id);
+    const endObj = startObj.plus({ minutes: duration });
+    
+    const isoDateStart = startObj.toISO();
+    const isoDateEnd = endObj.toISO();
+    
+    const selProc = procedures_global.value.find(p => p.id === appointmentForm.value.procedure_id);
+    const predictedValue = selProc?.price || 0;
     
     if (modalMode.value === 'create') {
       const hold = await store.dispatch('clinicScheduler/createHold', {
         professional_id: appointmentForm.value.professional_id,
         procedure_id: appointmentForm.value.procedure_id,
-        start_datetime: isoDate,
+        resource_id: appointmentForm.value.resource_id || null,
+        predicted_value: predictedValue,
+        start_datetime: isoDateStart,
+        end_datetime: isoDateEnd,
       });
       
       await store.dispatch('clinicScheduler/confirmAppointment', {
@@ -245,6 +345,7 @@ const saveAppointment = async () => {
         data: {
           patient_name: appointmentForm.value.patient_name,
           patient_phone: appointmentForm.value.patient_phone,
+          status: 'scheduled', // Explicitly using ENUM
         }
       });
     } else {
@@ -253,7 +354,10 @@ const saveAppointment = async () => {
         data: {
           professional_id: appointmentForm.value.professional_id,
           procedure_id: appointmentForm.value.procedure_id,
-          start_datetime: isoDate,
+          resource_id: appointmentForm.value.resource_id || null,
+          predicted_value: predictedValue,
+          start_datetime: isoDateStart,
+          end_datetime: isoDateEnd,
           patient_name: appointmentForm.value.patient_name,
           patient_phone: appointmentForm.value.patient_phone,
         }
@@ -473,6 +577,15 @@ onMounted(() => {
                 <option v-for="proc in procedures" :key="proc.id" :value="proc.id">{{ proc.name }} ({{ proc.duration_minutes }} min)</option>
               </select>
             </div>
+            <div v-if="procedures_global.find(p => p.id === appointmentForm.procedure_id)?.require_resource" class="space-y-2 col-span-2">
+              <label class="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase flex gap-1 items-center">
+                Recurso Necessário <span class="text-red-500">*</span>
+              </label>
+              <select v-model="appointmentForm.resource_id" class="w-full p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-xl text-sm outline-none">
+                <option value="" disabled selected>Selecione um recurso (Sala/Equipamento)...</option>
+                <option v-for="res in resources" :key="res.id" :value="res.id">{{ res.name }} {{ res.type ? `(${res.type})` : '' }}</option>
+              </select>
+            </div>
           </div>
 
           <div class="space-y-2">
@@ -528,6 +641,14 @@ onMounted(() => {
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-n-slate-10 uppercase">Procedimento</span>
               <span class="text-sm font-medium text-n-slate-12">{{ getProcedureName(selectedAppointment.procedure_id) }}</span>
+            </div>
+            <div class="flex items-center justify-between" v-if="selectedAppointment.resource_id">
+              <span class="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase">Recurso</span>
+              <span class="text-sm font-medium text-n-slate-12">{{ resources.find(r => r.id === selectedAppointment.resource_id)?.name }}</span>
+            </div>
+            <div class="flex items-center justify-between" v-if="selectedAppointment.predicted_value">
+              <span class="text-xs font-bold text-green-600 dark:text-green-500 uppercase">Valor Previsto</span>
+              <span class="text-sm font-bold text-green-600 dark:text-green-500 font-mono">R$ {{ Number(selectedAppointment.predicted_value).toFixed(2) }}</span>
             </div>
             <div class="flex items-center justify-between pt-2">
               <span class="text-xs font-bold text-n-slate-10 uppercase">Status</span>
