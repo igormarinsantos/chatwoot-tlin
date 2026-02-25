@@ -147,13 +147,7 @@ class Account < ApplicationRecord
   after_create_commit :notify_creation
   after_destroy :remove_account_sequences
 
-  def enabled_features
-    super.merge(
-      'captain_integration' => true,
-      'captain_integration_v2' => true,
-      'captain_tasks' => true
-    )
-  end
+
 
   def agents
     users.where(account_users: { role: :agent })

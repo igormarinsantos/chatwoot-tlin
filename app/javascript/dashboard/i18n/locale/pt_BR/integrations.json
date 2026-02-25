@@ -546,7 +546,7 @@
         "SUBTITLE": "Crie um assistente para fornecer respostas rápidas e precisas aos seus usuários. Ele pode aprender com seus artigos de ajuda e conversas passadas.",
         "FEATURE_SPOTLIGHT": {
           "TITLE": "Tlin",
-          "NOTE": "Tlin engages directly with customers, learns from your help docs and past conversations, and delivers instant, accurate responses. It handles the initial queries, providing quick resolutions before  transferring to an agent when needed."
+          "NOTE": "O Tlin interage diretamente com os clientes, aprende com seus documentos de ajuda e conversas anteriores, e fornece respostas instantâneas e precisas. Ele lida com as perguntas iniciais, fornecendo soluções rápidas antes de transferir para um atendente quando necessário."
         }
       },
       "GUARDRAILS": {
@@ -756,8 +756,8 @@
         "TITLE": "Nenhum documento disponível",
         "SUBTITLE": "Os documentos são usados pelo seu assistente para gerar perguntas frequentes. Pode importar documentos para fornecer um contexto para seu assistente.",
         "FEATURE_SPOTLIGHT": {
-          "TITLE": "Tlin Document",
-          "NOTE": "A document in Tlin serves as a knowledge resource for the assistant. By connecting your help center or guides, Tlin can analyze the content and provide accurate responses for customer inquiries."
+          "TITLE": "Documentos do Tlin",
+          "NOTE": "Um documento no Tlin serve como base de conhecimento para o assistente. Ao conectar sua central de ajuda ou guias, o Tlin pode analisar o conteúdo e fornecer respostas exatas para as perguntas dos clientes."
         }
       }
     },
@@ -772,27 +772,27 @@
           "NOTE": "Ferramentas personalizadas permitem seu assistente interagir com APIs e serviços externos. Crie ferramentas para obter dados, realizar ações ou integre com seus sistemas existentes para melhorar as capacidades do seu assistente."
         }
       },
-      "FORM_DESCRIPTION": "Configure your custom tool to connect with external APIs",
+      "FORM_DESCRIPTION": "Configure sua ferramenta personalizada para conectar com APIs externas",
       "OPTIONS": {
-        "EDIT_TOOL": "Edit tool",
-        "DELETE_TOOL": "Delete tool"
+        "EDIT_TOOL": "Alterar ferramenta",
+        "DELETE_TOOL": "Excluir ferramenta"
       },
       "CREATE": {
-        "TITLE": "Create Custom Tool",
-        "SUCCESS_MESSAGE": "Custom tool created successfully",
-        "ERROR_MESSAGE": "Failed to create custom tool"
+        "TITLE": "Criar ferramenta personalizada",
+        "SUCCESS_MESSAGE": "Ferramenta personalizada criada com sucesso",
+        "ERROR_MESSAGE": "Falha ao criar ferramenta personalizada"
       },
       "EDIT": {
-        "TITLE": "Edit Custom Tool",
-        "SUCCESS_MESSAGE": "Custom tool updated successfully",
-        "ERROR_MESSAGE": "Failed to update custom tool"
+        "TITLE": "Editar ferramenta personalizada",
+        "SUCCESS_MESSAGE": "Ferramenta personalizada atualizada com sucesso",
+        "ERROR_MESSAGE": "Falha ao atualizar ferramenta personalizada"
       },
       "DELETE": {
-        "TITLE": "Delete Custom Tool",
+        "TITLE": "Excluir ferramenta personalizada",
         "DESCRIPTION": "Tem certeza que deseja excluir está ferramenta customizável? Está ação não pode ser desfeita.",
         "CONFIRM": "Sim, excluir",
-        "SUCCESS_MESSAGE": "Custom tool deleted successfully",
-        "ERROR_MESSAGE": "Failed to delete custom tool"
+        "SUCCESS_MESSAGE": "Ferramenta personalizada excluída com sucesso",
+        "ERROR_MESSAGE": "Falha ao excluir ferramenta personalizada"
       },
       "FORM": {
         "TITLE": {
@@ -947,12 +947,12 @@
       },
       "EMPTY_STATE": {
         "TITLE": "Nenhuma FAQ encontrada",
-        "NO_PENDING_TITLE": "There are no more pending FAQs to review",
+        "NO_PENDING_TITLE": "Não há mais FAQs pendentes para revisar",
         "SUBTITLE": "Perguntas Frequentes ajudam seu assistente a fornecer respostas rápidas e precisas para perguntas de seus clientes. Eles podem ser gerados automaticamente a partir do seu conteúdo ou podem ser adicionados manualmente.",
-        "CLEAR_SEARCH": "Clear active filters",
+        "CLEAR_SEARCH": "Limpar filtros ativos",
         "FEATURE_SPOTLIGHT": {
-          "TITLE": "Tlin FAQ",
-          "NOTE": "Tlin FAQs detects common customer questions—whether missing from your knowledge base or frequently asked—and generates relevant FAQs to improve support. You can review each suggestion and decide whether to approve or reject it."
+          "TITLE": "FAQ do Tlin",
+          "NOTE": "As FAQs do Tlin detectam perguntas comuns dos clientes — estejam elas faltando na sua base de conhecimento ou sendo feitas com frequência — e geram respostas relevantes para aprimorar o suporte. Você pode revisar cada sugestão e decidir se aprova ou rejeita."
         }
       }
     },
