@@ -761,6 +761,50 @@
         }
       }
     },
+    "FILES": {
+      "HEADER": "Arquivos",
+      "ADD_NEW": "Adicionar arquivo",
+      "FORM_DESCRIPTION": "Adicione um arquivo para o Tlin poder enviá-lo durante as conversas quando solicitado pelo usuário.",
+      "CREATE": {
+        "TITLE": "Adicionar um arquivo",
+        "SUCCESS_MESSAGE": "O arquivo foi adicionado com sucesso",
+        "ERROR_MESSAGE": "Ocorreu um erro ao adicionar o arquivo, por favor, tente novamente."
+      },
+      "FORM": {
+        "NAME": {
+          "LABEL": "Nome do arquivo",
+          "PLACEHOLDER": "Ex: Cardápio de Pizzas",
+          "ERROR": "Por favor forneça um nome para o arquivo"
+        },
+        "DESCRIPTION": {
+          "LABEL": "Descrição",
+          "PLACEHOLDER": "Ex: O cardápio atualizado com todos os sabores e preços",
+          "ERROR": "Por favor forneça uma descrição detalhada para a IA compreender quando usar o arquivo"
+        },
+        "FILE": {
+          "LABEL": "Arquivo",
+          "ERROR": "Por favor, selecione um arquivo válido"
+        }
+      },
+      "DELETE": {
+        "TITLE": "Tem certeza de que deseja excluir este arquivo?",
+        "DESCRIPTION": "Esta ação é permanente. A IA não poderá mais enviar este arquivo.",
+        "CONFIRM": "Sim, excluir",
+        "SUCCESS_MESSAGE": "O arquivo foi excluído com sucesso",
+        "ERROR_MESSAGE": "Ocorreu um erro ao excluir o arquivo, por favor, tente novamente."
+      },
+      "OPTIONS": {
+        "DELETE_FILE": "Excluir Arquivo"
+      },
+      "EMPTY_STATE": {
+        "TITLE": "Nenhum arquivo disponível",
+        "SUBTITLE": "O Banco de Arquivos permite guardar PDFs e Imagens para que a inteligência artificial os envie durante os atendimentos.",
+        "FEATURE_SPOTLIGHT": {
+          "TITLE": "Banco de Arquivos Tlin",
+          "NOTE": "Armazene cardápios, tabelas de preços e apresentações para o Tlin enviar proativamente para os seus clientes quando eles pedirem."
+        }
+      }
+    },
     "CUSTOM_TOOLS": {
       "HEADER": "Ferramentas",
       "ADD_NEW": "Criar ferramenta",

@@ -25,6 +25,7 @@ class Captain::Assistant < ApplicationRecord
 
   belongs_to :account
   has_many :documents, class_name: 'Captain::Document', dependent: :destroy_async
+  has_many :captain_files, class_name: 'Captain::File', dependent: :destroy_async
   has_many :responses, class_name: 'Captain::AssistantResponse', dependent: :destroy_async
   has_many :captain_inboxes,
            class_name: 'CaptainInbox',
@@ -94,6 +95,7 @@ class Captain::Assistant < ApplicationRecord
   def agent_tools
     [
       self.class.resolve_tool_class('faq_lookup').new(self),
+      self.class.resolve_tool_class('send_file').new(self),
       self.class.resolve_tool_class('handoff').new(self)
     ]
   end
@@ -108,6 +110,13 @@ class Captain::Assistant < ApplicationRecord
           title: scenario.title,
           key: scenario.title.parameterize.underscore,
           description: scenario.description
+        }
+      end,
+      files: captain_files.map do |file|
+        {
+          id: file.id,
+          name: file.name,
+          description: file.description
         }
       end,
       response_guidelines: response_guidelines || [],

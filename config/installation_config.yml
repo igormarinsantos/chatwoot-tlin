@@ -193,9 +193,19 @@
   locked: false
   type: secret
 - name: CAPTAIN_OPEN_AI_MODEL
-  display_title: 'OpenAI Model'
-  description: 'The OpenAI model configured for use in Captain AI. Default: gpt-4.1-mini'
+  display_title: 'AI Model'
+  description: 'The AI model configured for use in Captain AI. Default: gpt-4o-mini'
   locked: false
+  type: select
+  options:
+    gpt-4o-mini: 'OpenAI - GPT-4o Mini'
+    gpt-4o: 'OpenAI - GPT-4o'
+    o1-mini: 'OpenAI - o1 Mini'
+    o3-mini: 'OpenAI - o3 Mini'
+    gemini-1.5-flash: 'Gemini - 1.5 Flash'
+    gemini-1.5-pro: 'Gemini - 1.5 Pro'
+    claude-3-5-haiku-latest: 'Anthropic - Claude 3.5 Haiku'
+    claude-3-5-sonnet-latest: 'Anthropic - Claude 3.5 Sonnet'
 - name: CAPTAIN_OPEN_AI_ENDPOINT
   display_title: 'OpenAI API Endpoint (optional)'
   description: 'The OpenAI endpoint configured for use in Captain AI. Default: https://api.openai.com/'

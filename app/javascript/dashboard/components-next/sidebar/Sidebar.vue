@@ -375,6 +375,14 @@ const menuItems = computed(() => {
           }),
         },
         {
+          name: 'Files Bank',
+          label: t('SIDEBAR.CAPTAIN_FILES'),
+          activeOn: ['captain_assistants_files_index'],
+          to: accountScopedRoute('captain_assistants_index', {
+            navigationPath: 'captain_assistants_files_index',
+          }),
+        },
+        {
           name: 'Scenarios',
           label: t('SIDEBAR.CAPTAIN_SCENARIOS'),
           activeOn: ['captain_assistants_scenarios_index'],

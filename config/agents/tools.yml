@@ -34,3 +34,8 @@
   title: 'Handoff to Human'
   description: 'Hand off the conversation to a human agent'
   icon: 'user-switch'
+
+- id: send_file
+  title: 'Send File'
+  description: 'Send a file attachment to the user from the assistant context. Only use when explicitly requested.'
+  icon: 'document'
