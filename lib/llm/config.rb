@@ -19,10 +19,11 @@ module Llm::Config
       @initialized = false
     end
 
-    def with_api_key(api_key, api_base: nil)
+    def with_api_key(api_key, api_base: nil, gemini_api_key: nil)
       context = RubyLLM.context do |config|
-        config.openai_api_key = api_key
-        config.openai_api_base = api_base
+        config.openai_api_key = api_key if api_key.present?
+        config.openai_api_base = api_base if api_base.present?
+        config.gemini_api_key = gemini_api_key if gemini_api_key.present?
       end
 
       yield context
@@ -33,6 +34,7 @@ module Llm::Config
     def configure_ruby_llm
       RubyLLM.configure do |config|
         config.openai_api_key = system_api_key if system_api_key.present?
+        config.gemini_api_key = gemini_api_key if gemini_api_key.present?
         config.openai_api_base = openai_endpoint.chomp('/') if openai_endpoint.present?
         config.logger = Rails.logger
       end
@@ -40,6 +42,10 @@ module Llm::Config
 
     def system_api_key
       InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_API_KEY')&.value
+    end
+
+    def gemini_api_key
+      InstallationConfig.find_by(name: 'CAPTAIN_GEMINI_API_KEY')&.value
     end
 
     def openai_endpoint

@@ -187,6 +187,11 @@
   description: 'The API key used to authenticate requests to OpenAI services for Captain AI.'
   locked: false
   type: secret
+- name: CAPTAIN_GEMINI_API_KEY
+  display_title: 'Gemini API Key'
+  description: 'The API key used to authenticate requests to Google Gemini for Captain AI.'
+  locked: false
+  type: secret
 - name: CAPTAIN_OPEN_AI_MODEL
   display_title: 'OpenAI Model'
   description: 'The OpenAI model configured for use in Captain AI. Default: gpt-4.1-mini'

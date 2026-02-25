@@ -55,7 +55,7 @@ class Captain::BaseTaskService
   end
 
   def execute_ruby_llm_request(model:, messages:, tools: [])
-    Llm::Config.with_api_key(api_key, api_base: api_base) do |context|
+    Llm::Config.with_api_key(api_key, api_base: api_base, gemini_api_key: gemini_api_key) do |context|
       chat = build_chat(context, model: model, messages: messages, tools: tools)
 
       conversation_messages = messages.reject { |m| m[:role] == 'system' }
@@ -158,6 +158,10 @@ class Captain::BaseTaskService
 
   def system_api_key
     @system_api_key ||= InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_API_KEY')&.value
+  end
+
+  def gemini_api_key
+    @gemini_api_key ||= InstallationConfig.find_by(name: 'CAPTAIN_GEMINI_API_KEY')&.value
   end
 
   def prompt_from_file(file_name)
