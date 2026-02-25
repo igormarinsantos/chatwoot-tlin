@@ -325,13 +325,6 @@ const menuItems = computed(() => {
       activeOn: ['kanban_view'],
     },
     {
-      name: 'Agenda',
-      label: t('SIDEBAR.AGENDA'),
-      icon: 'i-lucide-calendar',
-      to: accountScopedRoute('agenda_view'),
-      activeOn: ['agenda_view'],
-    },
-    {
       name: 'Clinic',
       label: t('SIDEBAR.CLINICA'),
       icon: 'i-lucide-activity',

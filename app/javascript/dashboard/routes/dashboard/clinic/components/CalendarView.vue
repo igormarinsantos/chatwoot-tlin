@@ -372,11 +372,11 @@ const procedures = computed(() => {
 });
 
 const professionalColors = [
-  { id: 'blue', hex: '#3b82f6', bgHex: '#dbeafe', textHex: '#1e40af' },
-  { id: 'purple', hex: '#a855f7', bgHex: '#f3e8ff', textHex: '#6b21a8' },
-  { id: 'pink', hex: '#ec4899', bgHex: '#fce7f3', textHex: '#9d174d' },
-  { id: 'orange', hex: '#f97316', bgHex: '#ffedd5', textHex: '#c2410c' },
-  { id: 'green', hex: '#22c55e', bgHex: '#dcfce7', textHex: '#166534' },
+  { id: 'blue', hex: '#3b82f6', tailwind: 'bg-blue-500/15 text-blue-700 dark:text-blue-300' },
+  { id: 'purple', hex: '#a855f7', tailwind: 'bg-purple-500/15 text-purple-700 dark:text-purple-300' },
+  { id: 'pink', hex: '#ec4899', tailwind: 'bg-pink-500/15 text-pink-700 dark:text-pink-300' },
+  { id: 'orange', hex: '#f97316', tailwind: 'bg-orange-500/15 text-orange-700 dark:text-orange-300' },
+  { id: 'green', hex: '#22c55e', tailwind: 'bg-green-500/15 text-green-700 dark:text-green-300' },
 ];
 
 const getAppointmentColorClasses = (appt) => {
@@ -664,10 +664,15 @@ onMounted(() => {
             <!-- Hover Indicator -->
             <div 
               v-if="hoverIndicator.colId === col.id" 
-              class="absolute left-0 right-0 h-10 border border-n-brand/40 bg-n-brand/10 z-20 pointer-events-none flex items-center px-1 animate-in fade-in"
+              class="absolute left-0 right-0 z-20 pointer-events-none animate-in fade-in"
               :style="{ top: `${hoverIndicator.top}px` }"
             >
-              <div class="text-[9px] font-bold text-n-brand bg-white dark:bg-n-solid-1 px-1 rounded shadow-sm opacity-80">{{ hoverIndicator.timeLabel }}</div>
+              <div class="w-full border-t border-n-brand relative flex items-center shadow-[0_0_10px_rgba(var(--n-brand-rgb),0.5)]">
+                <div class="absolute left-1 -top-2.5 text-[9px] font-bold text-white bg-n-brand px-1.5 py-0.5 rounded shadow-sm flex items-center gap-1">
+                   <span class="i-lucide-clock size-2.5 opacity-80" />
+                   {{ hoverIndicator.timeLabel }}
+                </div>
+              </div>
             </div>
 
             <!-- Actual Dynamic Data -->
@@ -675,30 +680,30 @@ onMounted(() => {
               v-for="appt in getAppointmentsForColumn(col)"
               :key="appt.id"
               @click="openViewModal(appt, $event)"
-              class="absolute rounded-lg p-1.5 shadow-sm animate-in fade-in zoom-in duration-300 overflow-hidden cursor-pointer hover:brightness-95 transition-all outline outline-1 outline-black/10 flex flex-col gap-0.5 leading-none"
+              class="absolute rounded-lg p-1.5 shadow-sm animate-in fade-in zoom-in duration-300 overflow-hidden cursor-pointer hover:brightness-110 transition-all outline outline-1 outline-black/10 dark:outline-white/10 flex flex-col gap-0.5 leading-none bg-white dark:bg-[#1a1a1a]"
               :style="{
-                backgroundColor: getAppointmentColorClasses(appt).bgHex,
                 borderLeft: `3px solid ${getAppointmentColorClasses(appt).hex}`,
-                color: getAppointmentColorClasses(appt).textHex,
                 ...getAppointmentStyle(appt, col)
               }"
             >
-              <div v-if="appt.status !== 'hold'" class="h-full flex flex-col overflow-hidden leading-tight justify-between">
+              <div class="absolute inset-0 opacity-15 mix-blend-multiply dark:mix-blend-lighten pointer-events-none" :style="{ backgroundColor: getAppointmentColorClasses(appt).hex }"></div>
+              
+              <div v-if="appt.status !== 'hold'" class="h-full flex flex-col overflow-hidden leading-tight justify-between relative z-10">
                 <div>
-                  <div class="flex items-center justify-between opacity-80 mb-0.5">
+                  <div class="flex items-center justify-between opacity-80 mb-0.5" :style="{ color: getAppointmentColorClasses(appt).hex }">
                     <span class="text-[8px] font-bold uppercase tracking-widest truncate">{{ appointmentStatuses.find(s => s.id === appt.status)?.name || 'Confirmado' }}</span>
                     <span class="text-[8px] font-bold hidden md:block">{{ DateTime.fromISO(appt.start_datetime).toFormat('HH:mm') }}</span>
                   </div>
-                  <p class="text-[10px] font-bold truncate leading-tight">{{ appt.patient_name }}</p>
-                  <p v-if="getProcedureDuration(appt.procedure_id) >= 20" class="text-[8px] font-medium opacity-80 truncate">{{ appt.patient_phone }}</p>
+                  <p class="text-[10px] font-bold truncate leading-tight text-n-slate-12">{{ appt.patient_name }}</p>
+                  <p v-if="getProcedureDuration(appt.procedure_id) >= 20" class="text-[8px] font-medium opacity-80 truncate text-n-slate-11">{{ appt.patient_phone }}</p>
                 </div>
                 <!-- Status Bar Indicator -->
                 <div class="w-full flex">
-                   <div v-if="getProcedureDuration(appt.procedure_id) >= 30" class="text-[9px] font-bold opacity-80 truncate">{{ getProcedureName(appt.procedure_id) }}</div>
+                   <div v-if="getProcedureDuration(appt.procedure_id) >= 30" class="text-[9px] font-bold opacity-80 truncate text-n-slate-11">{{ getProcedureName(appt.procedure_id) }}</div>
                 </div>
               </div>
 
-              <div v-else class="h-full opacity-60 flex flex-col overflow-hidden leading-tight justify-center">
+              <div v-else class="h-full opacity-60 flex flex-col overflow-hidden leading-tight justify-center relative z-10 text-n-slate-12">
                 <p class="text-[10px] font-bold uppercase tracking-widest truncate opacity-80 text-center">Reservando...</p>
               </div>
             </div>
