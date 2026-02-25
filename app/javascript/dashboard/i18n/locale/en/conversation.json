@@ -196,7 +196,7 @@
       "MESSAGING_RESTRICTED": "You cannot reply to this conversation",
       "MESSAGING_RESTRICTED_WHATSAPP": "You can only reply using a template message due to 24-hour message window restriction",
       "MESSAGE_SIGNATURE_NOT_CONFIGURED": "Message signature is not configured, please configure it in profile settings.",
-      "COPILOT_MSG_INPUT": "Give copilot additional prompts, or ask anything else... Press enter to send follow-up",
+      "COPILOT_MSG_INPUT": "Give tlin additional prompts, or ask anything else... Press enter to send follow-up",
       "CLICK_HERE": "Click here to update",
       "WHATSAPP_TEMPLATES": "Whatsapp Templates"
     },
@@ -216,7 +216,7 @@
       "DRAG_DROP": "Drag and drop here to attach",
       "START_AUDIO_RECORDING": "Start audio recording",
       "STOP_AUDIO_RECORDING": "Stop audio recording",
-      "COPILOT_THINKING": "Copilot is thinking",
+      "COPILOT_THINKING": "Tlin is thinking",
       "EMAIL_HEAD": {
         "TO": "TO",
         "ADD_BCC": "Add bcc",
@@ -300,7 +300,7 @@
     },
     "SIDEBAR": {
       "CONTACT": "Contact",
-      "COPILOT": "Copilot"
+      "COPILOT": "Tlin"
     },
     "VOICE_WIDGET": {
       "INCOMING_CALL": "Incoming call",

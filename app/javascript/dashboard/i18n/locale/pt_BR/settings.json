@@ -333,7 +333,7 @@
     "ACTIVE": "Ativo",
     "COMPANIES": "Empresas",
     "ALL_COMPANIES": "Todas as empresas",
-    "CAPTAIN": "Capitão",
+    "CAPTAIN": "Tlin",
     "CAPTAIN_ASSISTANTS": "Assistentes",
     "CAPTAIN_DOCUMENTS": "Documentos",
     "CAPTAIN_RESPONSES": "FAQs",
@@ -421,8 +421,8 @@
       "BUTTON_TXT": "Ir para o portal de cobrança"
     },
     "CAPTAIN": {
-      "TITLE": "Capitão",
-      "DESCRIPTION": "Gerenciar uso e créditos para o Captain AI.",
+      "TITLE": "Tlin",
+      "DESCRIPTION": "Gerenciar uso e créditos para o Tlin.",
       "BUTTON_TXT": "Comprar mais créditos",
       "DOCUMENTS": "Documentos",
       "RESPONSES": "Respostas",
@@ -438,7 +438,7 @@
     "TOPUP": {
       "BUY_CREDITS": "Comprar mais créditos",
       "MODAL_TITLE": "Comprar Créditos de IA",
-      "MODAL_DESCRIPTION": "Comprar créditos adicionais para o Capitão AI.",
+      "MODAL_DESCRIPTION": "Comprar créditos adicionais para o Tlin AI.",
       "CREDITS": "CRÉDITOS",
       "ONE_TIME": "única vez",
       "POPULAR": "Mais populares",

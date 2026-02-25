@@ -90,6 +90,14 @@ const hasMultipleInboxes = computed(
 );
 
 const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
+
+const toggleTlin = () => {
+  const currentStatus = currentChat.value.custom_attributes?.tlin_disabled || false;
+  store.dispatch('updateCustomAttributes', {
+    conversationId: currentChat.value.id,
+    customAttributes: { tlin_disabled: !currentStatus },
+  });
+};
 </script>
 
 <template>
@@ -151,6 +159,17 @@ const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
         :parent-width="width"
         class="hidden md:flex"
       />
+      <woot-button
+        v-if="currentChat.status === 'pending'"
+        size="small"
+        :variant="currentChat.custom_attributes?.tlin_disabled ? 'alert' : 'success'"
+        icon="bot"
+        class="hidden md:flex"
+        v-tooltip.bottom="currentChat.custom_attributes?.tlin_disabled ? 'Ativar Tlin' : 'Desativar Tlin'"
+        @click="toggleTlin"
+      >
+        {{ currentChat.custom_attributes?.tlin_disabled ? 'Tlin Desativado' : 'Tlin Ativo' }}
+      </woot-button>
       <MoreActions :conversation-id="currentChat.id" />
     </div>
   </div>
