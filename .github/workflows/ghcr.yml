@@ -1,0 +1,32 @@
+name: Build & Push (GHCR)
+
+on:
+  push:
+    branches: ['main']
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar codigo do repo
+        uses: actions/checkout@v4
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build base image (logs)
+        run: |
+          docker build --progress=plain -t chatwoot:development -f ./docker/Dockerfile .
+
+      - name: Build & Push rails image (logs)
+        run: |
+          docker build --progress=plain -f ./docker/dockerfiles/rails.Dockerfile -t ghcr.io/igormarinsantos/chatwoot-tlin:latest .
+          docker push ghcr.io/igormarinsantos/chatwoot-tlin:latest

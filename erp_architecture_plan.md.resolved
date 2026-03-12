@@ -1,0 +1,310 @@
+# Arquitetura e Especificação Técnica: ERP Conversacional para Clínicas (Agenda-Core)
+
+Este documento define a arquitetura, modelo de dados, APIs e plano de execução para a construção de um ERP voltado para clínicas (médicas, odontológicas e estéticas), utilizando o Chatwoot como Inbox e tendo a Agenda Inteligente como o seu motor central de regras e cruzamento de dados.
+
+---
+
+## 1. Proposta de Arquitetura (Visão Geral)
+
+A arquitetura transforma a Agenda de um mero "calendário visual" para um **Motor de Estado Operacional**.
+
+**Componentes Principais:**
+1. **Chatwoot Core (PostgreSQL/Rails):** Mantém a gestão de Contatos (CRM/Kanban base) e o Inbox Multicanal.
+2. **Scheduling Engine (Módulo Rails Acoplado):** Módulo transacional que gerencia Disponibilidade, Regras de Negócio de Profissionais e Prevenção de Conflitos (Double-booking com Advisory Locks).
+3. **Billing/Inventory Engine:** Acionado passivamente via Webhooks ou Outbox Pattern quando a Agenda transita estados (ex: `COMPLETED` gera Receivable e baixa no Estoque).
+4. **Automation Layer (n8n):** Fica restrito à orquestração de comunicação (avisos de WhatsApp) e integrações externas. Nenhuma regra primária de reserva/bloqueio residirá no n8n.
+5. **Frontend (Vue.js no Chatwoot):** Painel Administrativo unificado injetado nas rotas do Chatwoot Dashboard.
+
+---
+
+## 2. Modelo de Dados (Multi-tenant)
+
+Todas as tabelas possuem `account_id` (assumindo o lugar de `clinic_id` na base do Chatwoot) para isolamento multi-tenant seguro.
+
+```dbml
+// 3.1 Entidades base (Herdadas/Estendidas do Chatwoot)
+Table contacts {
+  id integer [primary key]
+  account_id integer [note: 'O clinic_id']
+  name string
+  phone_number string
+  custom_attributes jsonb [note: 'Armazena last_appointment, next_appointment, stage_id']
+}
+
+Table users {
+  id integer [primary key]
+  account_id integer
+  role integer [note: 'admin, agent...']
+}
+
+// 3.2 Catálogo & Configuração
+Table procedure_catalogs {
+  id integer [primary key]
+  account_id integer
+  name string
+  category string
+  base_duration_min integer
+  buffer_before_min integer
+  buffer_after_min integer
+  price_base decimal
+  requires_anamnesis boolean
+  requires_consent boolean
+  resource_types_required jsonb [note: 'ex: ["room", "laser"]']
+}
+
+Table professionals {
+  id integer [primary key]
+  account_id integer
+  user_id integer [null]
+  name string
+  color string
+  active boolean
+}
+
+Table professional_procedures {
+  professional_id integer
+  procedure_catalog_id integer
+}
+
+Table resources {
+  id integer [primary key]
+  account_id integer
+  name string
+  resource_type string [note: 'room, chair, equipment']
+  capacity integer [default: 1]
+}
+
+Table schedule_rules {
+  id integer [primary key]
+  account_id integer
+  entity_type string [note: 'Professional ou Resource']
+  entity_id integer
+  block_type string [note: 'working_hours, break']
+  day_of_week string [note: 'monday, all...']
+  start_time string
+  end_time string
+  start_at datetime [null, note: 'Para exceções temporais estritas']
+  end_at datetime [null]
+}
+
+// 3.3 Agenda
+Table appointments {
+  id integer [primary key]
+  account_id integer
+  contact_id integer
+  professional_id integer
+  procedure_id integer
+  status string [note: 'DRAFT, CONFIRMED, CHECKED_IN, IN_SERVICE, COMPLETED, NO_SHOW, CANCELED, RESCHEDULED']
+  start_at datetime
+  end_at datetime
+  rescheduled_to_id integer [null]
+  lock_version integer [note: 'Optimistic locking']
+  idempotency_key string
+}
+
+Table appointment_resources {
+  appointment_id integer
+  resource_id integer
+}
+
+// 3.4 Prontuário / Atendimento
+Table encounters {
+  id integer [primary key]
+  account_id integer
+  appointment_id integer
+  contact_id integer
+  professional_id integer
+  started_at datetime
+  ended_at datetime
+  clinical_notes_json jsonb
+}
+
+// 3.5 Financeiro
+Table receivables {
+  id integer [primary key]
+  account_id integer
+  contact_id integer
+  appointment_id integer [null]
+  amount decimal
+  due_date date
+  status string [note: 'pending, paid, late']
+}
+
+Table payments {
+  id integer [primary key]
+  account_id integer
+  receivable_id integer
+  amount decimal
+  paid_at datetime
+  gateway_ref string
+}
+
+// 3.6 Estoque
+Table inventory_items {
+  id integer [primary key]
+  account_id integer
+  name string
+  sku string
+  min_level integer
+}
+
+Table stock_movements {
+  id integer [primary key]
+  account_id integer
+  inventory_item_id integer
+  appointment_id integer [null]
+  movement_type string [note: 'in, out']
+  qty integer
+}
+
+// Infra de Mensageria Interna
+Table outbox_events {
+  id integer [primary key]
+  account_id integer
+  event_type string
+  payload jsonb
+  delivered_at datetime [null]
+}
+```
+
+---
+
+## 3. Fluxo de Estados do Appointment
+
+O ciclo de vida operacional da clínica guia o Agendamento através da seguinte máquina de estados (FSM):
+
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT : hold temporário / bloqueio
+    DRAFT --> CONFIRMED : pagamento/validação
+    DRAFT --> CANCELED : timeout/desistência
+    
+    CONFIRMED --> CHECKED_IN : cliente na recepção
+    CONFIRMED --> CANCELED : cancelou prévio
+    CONFIRMED --> NO_SHOW : não compareceu
+    CONFIRMED --> RESCHEDULED : moveu prazo (+link novo appt)
+    
+    CHECKED_IN --> IN_SERVICE : profissional chamou
+    IN_SERVICE --> COMPLETED : encerrou consulta
+    
+    COMPLETED --> [*] : Gera Encounter, Receivables, Baixa Estoque
+    CANCELED --> [*] : CRM Update (Status: Cancelou)
+    NO_SHOW --> [*] : CRM Update (Status: Faltou)
+```
+
+**Regras estritas injetadas:**
+- `COMPLETED` é o estopim de automações de negócio (Fechamento financeiro, Prontuário).
+- `RESCHEDULED` deve obrigatoriamente criar um novo [Appointment](file:///d:/Tlin.ai%20Chatwoot/chatwoot-main/app/models/appointment.rb#1-13) e ligar a FK `rescheduled_to_id` no antigo, mantendo auditoria limpa e evitando buracos no log metrificado.
+
+---
+
+## 4. Integração com CRM Kanban
+
+A migração de fase do Kanban baseia-se unicamente nos espelhamentos do estado da agenda dentro dos *Custom Attributes* do Contact do Chatwoot.
+
+**Comportamento (Adapter Layer):**
+Sempre que um estado do [Appointment](file:///d:/Tlin.ai%20Chatwoot/chatwoot-main/app/models/appointment.rb#1-13) muda, uma chamada interceptadora (via Sidekiq ou Observer) atualiza o `contact.custom_attributes`:
+- `last_appointment_at`: data local do último
+- `next_appointment_at`: o mais próximo >= now
+- `appointment_status`: O estado da FSM acima (e.g. `CONFIRMED`)
+- `kanban_stage_id`: Atualização automática (e.g. `CHECKED_IN` -> Stage "Sala de Espera").
+ 
+Isso permite que a *Activity Feed* nativa do contato registre não apenas chats, mas a cronologia clínica completa em uma visão só.
+
+---
+
+## 5. API Design (Endpoints Principais REST)
+
+Padrão de URL Base: `/api/v1/accounts/{account_id}/clinic/`
+
+### 5.1 Busca Avançada e Disponibilidade
+- `GET /availability`
+  - **Params:** `procedure_id`, `professional_id` (opcional), [start](file:///d:/Tlin.ai%20Chatwoot/chatwoot-main/app/models/availability_block.rb#14-18), [end](file:///d:/Tlin.ai%20Chatwoot/chatwoot-main/app/models/availability_block.rb#14-18), `resource_id` (opcional)
+  - **Fluxo:** Cruza em RAM regras fixas, cruzamentos `tsrange` no banco nativo, capacity de resources e durações do procedimento atualizadas (+ bufferes default). Retorna as janelas em blocos de e.g. 15min.
+
+### 5.2 Gerenciamento do Motor Operacional (Appointments)
+- `POST /holds` -> Cria slot `DRAFT` (com `Idempotency-Key` exigido)
+- `POST /holds/{id}/convert` -> Transita DRAFT para `CONFIRMED`
+- `GET /appointments` -> Retorna lista (filters suportados)
+- `PATCH /appointments/{id}` -> Resize / Modificações estruturais (Verifica Lock Version e Re-Roda Overlap Validation)
+- `POST /appointments/{id}/checkin` -> Action route
+- `POST /appointments/{id}/start` -> Action route
+- `POST /appointments/{id}/complete` -> Action route (Dispara side-effects)
+- `POST /appointments/{id}/cancel` -> Action route
+- `POST /appointments/{id}/reschedule` -> Invalida slot atual, injeta FK de vínculo e retorna novo card.
+
+### 5.3 Configurações Base
+- CRUD convencional `GET/POST/PUT/DELETE` nas frentes: `/procedures`, `/professionals`, `/resources`, `/availability_blocks`
+
+### 5.4 Financeiro e Estoque (Hooks auto-gerenciados)
+- `GET /contacts/{contact_id}/financial_summary`
+- `POST /receivables/{id}/pay` -> Seta payment real.
+
+---
+
+## 6. Especificação UI/UX da Agenda
+
+Para suportar fluxograma sem estrangular a interface com botões soltos.
+
+### 6.1 Visão da Agenda (Módulo Unificado)
+- **Tabela Grid Global:** Componente de calendário diário e semanal de colunas infinitas ou multi-select de profissionais.
+  - Hover sobre evento: Card Popover com Quick-view.
+- **Lista:** Tabela densa para a Recepção visualizar do dia: Hora | Nome (com link pro Contato/Inbox da mensagem) | Tipo da Consulta | Status Badge | Recebedor (Pago/Pendente).
+- **Painel Lateral Contextual (Inspector):**
+  - Cuidar para não tampar a tabela toda. Emite abas no painel: Info Técnica | Histórico CRM | Prontuário | Finanças. Retém a navegação fluida sem refresh.
+
+### 6.2 Micro-Interações Críticas
+- **Drag & Drop Reagendamento:** O evento de `drop` tenta um PATCH interno no banco. Se retornar `409 Conflict`, o card sofre animação de mola "snap back" para o local original avisando indisponibilidade de recurso ou profissional.
+- **Check-in Fast Actions:** Botão verde lateral flutuante no evento para empurrar o Card pelo Pipeline rápido sem abrir Modal Pesado.
+
+---
+
+## 7. Eventos de Automação (Outbox)
+
+Como regras nativas rodam no Core, as automações reagem 100% downstream via Webhooks lidos pela tabela `outbox_events` enviados ao endpoint n8n.
+
+*Lista de Triggers Puros:*
+- `appointment.draft.created`: Pode avisar no banco "Aguardando Confirmação do Pagamento Pix"
+- `appointment.confirmed`: Disparar mensagem WA de lembrete "Agendado para dd/mm!"
+- `appointment.rescheduled`: "Notamos que seu horário mudou"
+- `appointment.no_show`: Enviar Flow de Repescagem Mágico de Reagendamento "Que pena que não deu..."
+- `encounter.completed`: Disparar pesquisa de satisfação (NPS).
+- `payment.received`: Emitir recibo/NF.
+
+---
+
+## 8. Plano de Migração Zero-Downtime
+
+Para aposentar a "agenda atual corrompida" sem paralisar o CRM:
+1. **Infra Passiva:** Subir as migrations e backend controllers paralelos (V1 nova), mas não conectá-los na interface gráfica atual.
+2. **Adapter de Escrita Dupla (Proxy):** Modificar a camada Front-end Vue anterior para que todo save da Agenda Antiga converta seus dados na mosca e dispare POST para as APIs Novas retrocompativelmente.
+3. **Data Backfill:** Fazer um rake local no console `rails data:migrate_agenda_v1`, pegando metadados dos `Contact.custom_attributes` ou JSON estragado e criar instâncias de [Appointments](file:///d:/Tlin.ai%20Chatwoot/chatwoot-main/app/javascript/dashboard/api/clinicScheduler.js#84-91) para o futuro e re-vincular aos contacts_ids.
+4. **Flip Switch UI:** Deploy da NOVA View do calendário, ativada por uma *feature flag* e desligando a tela antiga.
+5. **Drop Legacy:** Remover colunas velhas semanas depois quando estiver tudo estável.
+
+---
+
+## 9. Critérios de Aceite (DoD)
+
+- [ ] **Locking Categórico:** Transações simultâneas de clientes diferentes para o mesmo profissional/recurso num buraco temporal dão erro `409` elegante para o segundo que tentar finalizar. NUNCA criar double-booking real.
+- [ ] **Capacidade Respeitada:** Uma sala (capacity=1) tentada para Laser 1 pelo médico A e Laser 2 pela médica B às 10h nega uma das inclusões e exige realocação de recurso.
+- [ ] **Kanban Lockstep:** Se um receptionist move um Card de agendamento na visualização de Painel, a fase correspondente no pipeline de Leads (vendas) do Chatwoot deve saltar sem erro de "Mismatch".
+- [ ] **Efeito Dominó no End:** Botão de Completar Atendimento checa as permissões e exibe a baixa financeira automática pra contabilidade ver.
+
+---
+
+## 10. Execução: MVP em Fases
+
+**Fase 1: Motor Principal & Agenda Pura**
+- Scaffold da Estrutura PostgreSQL + Multi-Tenancy Segura (Migrations em Ordem).
+- CRUD das Configurações Iniciais (Recursos, Procedimentos, Horários Profissionais).
+- [OverlapValidator](file:///d:/Tlin.ai%20Chatwoot/chatwoot-main/app/services/clinic_scheduler/overlap_validator.rb#2-82) nativo, Hold Idempotency-key, e rotas Appointments até os CANCELED/CONFIRMED status.
+- UI completa re-escrita do Calendário na tela. Modals novos.
+- Sync de Atributos do Contact do Chatwoot no final de cada transaction.
+
+**Fase 2: Engine de Clínica (Encounter & Documentos)**
+- Formulários de Anamnese estáticos via JSON ou interface. Assinaturas e arquivos (Anexos em storage S3 real).
+- Lançamento do Dashboard "Consultório (Foco no Médico na cabine, fora do grid geral)".
+
+**Fase 3: Fluxo de Dinheiro (Billing & Inventory)**
+- API que gera pagamentos espelhados (`Receivables`), conectores para estocar ampolas e integração final de Webhooks (n8n assumindo repescagens). BI dashboards ativados.
